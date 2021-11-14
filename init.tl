@@ -1,36 +1,18 @@
 print('hello. I scene from separated thread')
 
---local tl = require "tl"
 require "love"
 require "love_inc".require()
 require 'pipeline'
 
---require "love.timer"
-
-love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/empty/?.lua")
+love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 local i18n = require "i18n"
-local colorize = require 'ansicolors2'.ansicolors
-local format = string.format
-
---require "external"
---require "common"
-
---package.path = package.path .. ";scenes/automato/?.lua"
-
---local cam = require "camera".new()
---local gr = love.graphics
---local imgui = require "imgui"
---local inspect = require "inspect"
---local keyconfig = require "keyconfig"
---local next = next
---local timer = require "Timer"
+--local colorize = require 'ansicolors2'.ansicolors
+--local format = string.format
 
 local event_channel = love.thread.getChannel("event_channel")
 --local draw_ready_channel = love.thread.getChannel("draw_ready_channel")
 --local graphic_command_channel = love.thread.getChannel("graphic_command_channel")
 --local graphic_code_channel = love.thread.getChannel("graphic_code_channel")
-
-local mx, my = 0, 0
 
 local last_render: number
 
@@ -122,8 +104,8 @@ local function mainloop()
             for _, e in ipairs(events) do
                 local evtype: string = (e as {string})[1]
                 if evtype == "mousemoved" then
-                    mx = math.floor((e as {number})[2])
-                    my = math.floor((e as {number})[3])
+                    --mx = math.floor((e as {number})[2])
+                    --my = math.floor((e as {number})[3])
                 elseif evtype == "keypressed" then
                     local key = (e as {string})[2]
                     local scancode = (e as {string})[3]
