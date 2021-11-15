@@ -1,4 +1,5 @@
-print('hello. I scene from separated thread')
+local colorize = require 'ansicolors2'.ansicolors
+print(colorize('%{yellow}chimunk'))
 
 require "love"
 require "love_inc".require()
@@ -6,7 +7,6 @@ require 'pipeline'
 
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 --local i18n = require "i18n"
-local colorize = require 'ansicolors2'.ansicolors
 --local format = string.format
 
 local event_channel = love.thread.getChannel("event_channel")
@@ -172,4 +172,4 @@ if is_stop then
     love.event.quit()
 end
 
-print('goodbye. I scene from separated thread')
+print(colorize('%{yellow}chimunk'))
