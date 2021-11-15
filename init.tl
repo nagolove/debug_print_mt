@@ -17,6 +17,7 @@ local event_channel = love.thread.getChannel("event_channel")
 local last_render: number
 
 local pipeline = Pipeline.new()
+local pw = require "physics_wrapper"
 
 -- Как часто перекомпилировать код рисовки?
 -- Варианты - 
