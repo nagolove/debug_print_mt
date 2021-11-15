@@ -5,8 +5,8 @@ require "love_inc".require()
 require 'pipeline'
 
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
-local i18n = require "i18n"
---local colorize = require 'ansicolors2'.ansicolors
+--local i18n = require "i18n"
+local colorize = require 'ansicolors2'.ansicolors
 --local format = string.format
 
 local event_channel = love.thread.getChannel("event_channel")
@@ -27,6 +27,7 @@ local pw = require "physics_wrapper"
 -- потока.
 
 local function init()
+    --[[
     i18n.set('en.welcome', 'welcome to this program')
     i18n.load({
         en = {
@@ -40,6 +41,7 @@ local function init()
     })
     print("translated", i18n.translate('welcome'))
     print("translated", i18n('welcome'))
+    --]]
 
     local rendercode = [[
     local w, h = love.graphics.getDimensions()
@@ -76,6 +78,8 @@ local function init()
     --]]
 
     last_render = love.timer.getTime()
+
+    pw.init()
 end
 
 local function render()
@@ -97,6 +101,8 @@ local function render()
     end
 end
 
+local is_stop = false
+
 local function mainloop()
     while true do
         --print('mainloop iter')
@@ -110,10 +116,19 @@ local function mainloop()
                 elseif evtype == "keypressed" then
                     local key = (e as {string})[2]
                     local scancode = (e as {string})[3]
-                    print('keypressed', key, scancode)
-                    if scancode == "escape" then
-                        love.event.quit()
-                    end
+
+                    local msg = '%{green}keypressed '
+                    print(colorize(msg .. key .. ' ' .. scancode))
+
+                    --if scancode == "escape" then
+                        --is_stop = true
+                        --print(colorize('%{blue}escape pressed'))
+                        --break
+                    --end
+
+                    msg = '%{yellow}keypressed '
+                    print(colorize(msg .. key .. ' ' .. scancode))
+
                 elseif evtype == "mousepressed" then
                     --local x: number = (e as {number})[2]
                     --local y: number = (e as {number})[3]
@@ -125,6 +140,7 @@ local function mainloop()
         end
         
         --[[
+        -- Ограничение кадров в секунду до 60
         local nt = love.timer.getTime()
         --local pause = 1. / 10.
         local pause = 1. / 300.
@@ -138,16 +154,22 @@ local function mainloop()
 
         render()
 
-        --[[
-        Ограничение кадров в секунду до 60
-        --]]
-
         --love.timer.sleep(0.0008)
         love.timer.sleep(0.0001)
     end
 end
 
+local function free()
+    pw.free()
+    print('scene thread free function was called')
+end
+
 init()
 mainloop()
+
+if is_stop then
+    free()
+    love.event.quit()
+end
 
 print('goodbye. I scene from separated thread')
