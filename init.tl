@@ -1,5 +1,5 @@
 local colorize = require 'ansicolors2'.ansicolors
-print(colorize('%{yellow}chimunk'))
+print(colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 
 require "love"
 require "love_inc".require()
@@ -16,7 +16,7 @@ local event_channel = love.thread.getChannel("event_channel")
 
 local last_render: number
 
-local pipeline = Pipeline.new()
+local pipeline = Pipeline.new("scenes/chipmunk_mt")
 local pw = require "physics_wrapper"
 
 -- Как часто перекомпилировать код рисовки?
@@ -44,25 +44,36 @@ local function init()
     --]]
 
     local rendercode = [[
-    local w, h = love.graphics.getDimensions()
-    local x, y = math.random() * w, math.random() * h
-    love.graphics.setColor{0, 0, 0}
-    love.graphics.print("TestTest", x, y)
+    while true do
+        local w, h = love.graphics.getDimensions()
+        local x, y = math.random() * w, math.random() * h
+        love.graphics.setColor{0, 0, 0}
+        love.graphics.print("TestTest", x, y)
+        coroutine.yield()
+    end
     ]]
     pipeline:pushCode('text', rendercode)
 
     rendercode = [[
-    local y = graphic_command_channel:demand()
-    local x = graphic_command_channel:demand()
-    local rad = graphic_command_channel:demand()
-    love.graphics.setColor{0, 0, 1}
-    love.graphics.circle('fill', x, y, rad)
+    while true do
+        local y = graphic_command_channel:demand()
+        local x = graphic_command_channel:demand()
+        local rad = graphic_command_channel:demand()
+        love.graphics.setColor{0, 0, 1}
+        love.graphics.circle('fill', x, y, rad)
+        coroutine.yield()
+    end
     ]]
     pipeline:pushCode('circle_under_mouse', rendercode)
 
     -- Допустимо-ли переопределение функций? Или добавить специальный флаг?
     -- Нормально-ли использовать константы?
-    pipeline:pushCode('clear', "love.graphics.clear{0.5, 0.5, 0.5}")
+    pipeline:pushCode('clear', [[
+    while true do
+        love.graphics.clear{0.5, 0.5, 0.5}
+        coroutine.yield()
+    end
+    ]])
 
     --[[
     -- Добавлять-ли такую функцию? Будет использоваться?
@@ -104,7 +115,7 @@ end
 local is_stop = false
 
 local function mainloop()
-    while true do
+    while not is_stop do
         --print('mainloop iter')
         local events = event_channel:pop() as {any}
         if events then
@@ -120,14 +131,14 @@ local function mainloop()
                     local msg = '%{green}keypressed '
                     print(colorize(msg .. key .. ' ' .. scancode))
 
-                    --if scancode == "escape" then
-                        --is_stop = true
-                        --print(colorize('%{blue}escape pressed'))
-                        --break
-                    --end
+                    if scancode == "escape" then
+                        is_stop = true
+                        print(colorize('%{blue}escape pressed'))
+                        break
+                    end
 
-                    msg = '%{yellow}keypressed '
-                    print(colorize(msg .. key .. ' ' .. scancode))
+                    --msg = '%{yellow}keypressed '
+                    --print(colorize(msg .. key .. ' ' .. scancode))
 
                 elseif evtype == "mousepressed" then
                     --local x: number = (e as {number})[2]
@@ -168,8 +179,10 @@ init()
 mainloop()
 
 if is_stop then
+    print('free resources')
     free()
     love.event.quit()
 end
 
-print(colorize('%{yellow}chimunk'))
+
+print(colorize('%{yellow}<<<<<%{reset} chipmunk_mt finished'))
