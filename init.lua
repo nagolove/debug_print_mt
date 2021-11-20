@@ -180,28 +180,30 @@ local function mainloop()
       end
 
 
+      local nt = love.timer.getTime()
+
+      local pause = 1. / 300.
+      local diff = nt - last_render
+      if diff >= pause then
+         last_render = nt
+
+
+         render()
+      end
 
 
 
 
 
 
+      local timeout = 0.0001
 
-
-
-
-
-
-      render()
-
-
-      love.timer.sleep(0.0001)
+      love.timer.sleep(timeout)
    end
 end
 
 local function free()
    pw.free()
-   print('scene thread free function was called')
 end
 
 init()

@@ -179,12 +179,12 @@ local function mainloop()
             end
         end
         
-        --[[
         -- Ограничение кадров в секунду до 60
         local nt = love.timer.getTime()
         --local pause = 1. / 10.
         local pause = 1. / 300.
-        if nt - last_render >= pause then
+        local diff = nt - last_render
+        if diff >= pause then
             last_render = nt
             --local msg = 'love.timer.getTime() = %f'
             --print(colorize('%{blue}' .. format(msg, love.timer.getTime())))
@@ -192,16 +192,18 @@ local function mainloop()
         end
         --]]
 
-        render()
+        --pw.update(diff)
 
+        --render()
+
+        local timeout = 0.0001
         --love.timer.sleep(0.0008)
-        love.timer.sleep(0.0001)
+        love.timer.sleep(timeout)
     end
 end
 
 local function free()
     pw.free()
-    print('scene thread free function was called')
 end
 
 init()
