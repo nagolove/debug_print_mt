@@ -14,6 +14,35 @@ local event_channel = love.thread.getChannel("event_channel")
 --local graphic_command_channel = love.thread.getChannel("graphic_command_channel")
 --local graphic_code_channel = love.thread.getChannel("graphic_code_channel")
 
+--[[
+
+-- chipmunk.d.tl
+
+local record Chipmunk
+    record Space
+        record Gravity
+            x: number
+            y: number
+        end
+
+        iterations: integer
+        gravity: Gravity    
+    end
+
+    cpSpaceNew: function(): Space
+end
+
+return Chipmunk
+-- main.tl
+
+local C = require("chipmunk")
+local space = C.cpSpaceNew()
+space.iterations = 20
+space.gravity.x = 0
+space.gravity.y = -100
+
+--]]
+
 local last_render: number
 
 local pipeline = Pipeline.new("scenes/chipmunk_mt")
