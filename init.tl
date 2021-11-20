@@ -84,6 +84,11 @@ local function init()
     pipeline:pushCode('text', rendercode)
 
     rendercode = [[
+    -- Загружать текстуры здесь
+    -- Загружать текстуры здесь
+    -- Загружать текстуры здесь
+    -- Загружать текстуры здесь
+
     while true do
         local y = graphic_command_channel:demand()
         local x = graphic_command_channel:demand()
