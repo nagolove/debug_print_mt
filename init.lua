@@ -124,7 +124,7 @@ local function init()
 
    last_render = love.timer.getTime()
 
-   pw.init()
+   pw.init(pipeline)
 end
 
 local function render()
@@ -143,6 +143,7 @@ local function render()
       pipeline:push(rad)
       pipeline:close()
 
+      pw.render()
    end
 end
 
