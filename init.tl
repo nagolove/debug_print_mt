@@ -10,6 +10,7 @@ love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 --local format = string.format
 
 local event_channel = love.thread.getChannel("event_channel")
+local main_channel = love.thread.getChannel("main_channel")
 --local draw_ready_channel = love.thread.getChannel("draw_ready_channel")
 --local graphic_command_channel = love.thread.getChannel("graphic_command_channel")
 --local graphic_code_channel = love.thread.getChannel("graphic_code_channel")
@@ -187,8 +188,8 @@ local function mainloop()
         
         -- Ограничение кадров в секунду до 60
         local nt = love.timer.getTime()
-        --local pause = 1. / 10.
         local pause = 1. / 300.
+        --local pause = 1. / 4000.
         local diff = nt - last_render
         if diff >= pause then
             last_render = nt
@@ -196,14 +197,12 @@ local function mainloop()
             --print(colorize('%{blue}' .. format(msg, love.timer.getTime())))
             render()
         end
-        --]]
 
         --pw.update(diff)
 
         --render()
 
         local timeout = 0.0001
-        --love.timer.sleep(0.0008)
         love.timer.sleep(timeout)
     end
 end
@@ -216,9 +215,10 @@ init()
 mainloop()
 
 if is_stop then
-    print('free resources')
     free()
-    love.event.quit()
+    main_channel:push('quit')
+    print('Thread resources are freed')
+    --love.event.quit()
 end
 
 

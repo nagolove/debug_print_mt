@@ -10,6 +10,7 @@ love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 
 
 local event_channel = love.thread.getChannel("event_channel")
+local main_channel = love.thread.getChannel("main_channel")
 
 
 
@@ -187,8 +188,8 @@ local function mainloop()
 
 
       local nt = love.timer.getTime()
-
       local pause = 1. / 300.
+
       local diff = nt - last_render
       if diff >= pause then
          last_render = nt
@@ -201,9 +202,7 @@ local function mainloop()
 
 
 
-
       local timeout = 0.0001
-
       love.timer.sleep(timeout)
    end
 end
@@ -216,9 +215,10 @@ init()
 mainloop()
 
 if is_stop then
-   print('free resources')
    free()
-   love.event.quit()
+   main_channel:push('quit')
+   print('Thread resources are freed')
+
 end
 
 
