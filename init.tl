@@ -128,21 +128,28 @@ local function init()
     pw.init(pipeline)
 end
 
+--[[
+Откуда берутся мелькания при рисовке?
+Значит, что данные не сихронизируются? То есть основной поток получает
+не все данные и ждет их. В это время он рисует часть картинки, ждет,
+рисует вторую часть. В момент ожидания видно мелькание? Но картинка
+слишком простая.
+--]]
 local function render()
     if pipeline:ready() then
 
         pipeline:openAndClose('clear')
 
-        pipeline:open('text')
-        pipeline:close()
+        --pipeline:open('text')
+        --pipeline:close()
 
-        local x, y = love.mouse.getPosition()
-        local rad = 50
-        pipeline:open('circle_under_mouse')
-        pipeline:push(y)
-        pipeline:push(x)
-        pipeline:push(rad)
-        pipeline:close()
+        --local x, y = love.mouse.getPosition()
+        --local rad = 50
+        --pipeline:open('circle_under_mouse')
+        --pipeline:push(y)
+        --pipeline:push(x)
+        --pipeline:push(rad)
+        --pipeline:close()
 
         pw.render()
     end
