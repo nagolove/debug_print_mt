@@ -4,6 +4,11 @@ print(colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 require "love"
 require "love_inc".require()
 require 'pipeline'
+--local Cm = require 'chipmunk'
+
+--Cm.C.cpInitChipmunk()
+--local v = Cm.cpvzero()
+--print(v)
 
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 --local i18n = require "i18n"
@@ -178,6 +183,13 @@ local function mainloop()
                         is_stop = true
                         print(colorize('%{blue}escape pressed'))
                         break
+                    end
+
+                    if scancode == 'left' then
+                        -- Как передать импульс или силу телу?
+                        -- Организация обертки над Бурундучком.
+                        -- Минимальное количество функций.
+                        print('left')
                     end
 
                     --msg = '%{yellow}keypressed '

@@ -5,6 +5,11 @@ require("love")
 require("love_inc").require()
 require('pipeline')
 
+
+
+
+
+
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 
 
@@ -138,7 +143,7 @@ end
 local function render()
    if pipeline:ready() then
 
-
+      pipeline:openAndClose('clear')
 
 
 
@@ -178,6 +183,10 @@ local function mainloop()
                   is_stop = true
                   print(colorize('%{blue}escape pressed'))
                   break
+               end
+
+               if scancode == 'left' then
+                  print('left')
                end
 
 
