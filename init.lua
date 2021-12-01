@@ -1,10 +1,11 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local colorize = require('ansicolors2').ansicolors
+local inspect = require("inspect")
 print(colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 
 require("love")
 require("love_inc").require()
 require('pipeline')
-
+local Cm = require('chipmunk')
 
 
 
@@ -131,6 +132,9 @@ local function init()
    last_render = love.timer.getTime()
 
    pw.init(pipeline)
+
+   pw.newBoxBody(200, 500)
+   print('pw.getBodies()', inspect(pw.getBodies()))
 end
 
 
@@ -162,6 +166,55 @@ end
 
 local is_stop = false
 
+local function moveBody(scancode)
+   if scancode == 'left' then
+
+
+
+      print('left')
+   end
+   if scancode == 'right' then
+      print('right')
+   end
+   if scancode == 'up' then
+      print('up')
+   end
+   if scancode == 'down' then
+      print('down')
+   end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local function eachBody(b)
+
+end
+
+local bodyIter = pw.newEachBodyIter(eachBody)
+
 local function mainloop()
    while not is_stop do
 
@@ -185,9 +238,7 @@ local function mainloop()
                   break
                end
 
-               if scancode == 'left' then
-                  print('left')
-               end
+               moveBody(scancode)
 
 
 
@@ -217,6 +268,8 @@ local function mainloop()
 
 
 
+
+      pw.eachBody(bodyIter)
 
       local timeout = 0.0001
       love.timer.sleep(timeout)

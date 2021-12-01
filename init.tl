@@ -1,10 +1,11 @@
 local colorize = require 'ansicolors2'.ansicolors
+local inspect = require "inspect"
 print(colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 
 require "love"
 require "love_inc".require()
 require 'pipeline'
---local Cm = require 'chipmunk'
+local Cm = require 'chipmunk'
 
 --Cm.C.cpInitChipmunk()
 --local v = Cm.cpvzero()
@@ -131,6 +132,9 @@ local function init()
     last_render = love.timer.getTime()
 
     pw.init(pipeline)
+
+    pw.newBoxBody(200, 500)
+    print('pw.getBodies()', inspect(pw.getBodies()))
 end
 
 --[[
@@ -162,6 +166,55 @@ end
 
 local is_stop = false
 
+local function moveBody(scancode: string)
+    if scancode == 'left' then
+        -- Как передать импульс или силу телу?
+        -- Организация обертки над Бурундучком.
+        -- Минимальное количество функций.
+        print('left')
+    end
+    if scancode == 'right' then
+        print('right')
+    end
+    if scancode == 'up' then
+        print('up')
+    end
+    if scancode == 'down' then
+        print('down')
+    end
+end
+
+--[[
+Привет. Вопрос по luajit. Как лучше передать таблицу(с установленной метатаблицей) через void* указатель data?
+Заголовочный файл для ffi:
+```
+typedef void (*cpSpaceBodyIteratorFunc)(cpBody *body, void *data);
+void cpSpaceEachBody(cpSpace *space, cpSpaceBodyIteratorFunc func, void *data);
+```
+Пример:
+```
+local eachBody_C = ffi.cast("cpSpaceBodyIteratorFunc", function(body, data)
+    -- тут хочу использовать data как табличку
+end)
+
+-- Это не нужно наверно
+local internal_data = ffi.new('char[1024]')
+local void_internal_data = ffi.cast('void*', internal_data)
+
+local function foo()
+    C.cpSpaceEachBody(space, eachBody_C, void_internal_data)
+end
+```
+--]]
+
+-- Преобразование типов между pw.Body и cpBody
+--local function eachBody(b: pw.Body)
+local function eachBody(b: Cm.cpBody)
+    --print(colorize('%{yellow}' .. b:getInfoStr()))
+end
+
+local bodyIter = pw.newEachBodyIter(eachBody)
+
 local function mainloop()
     while not is_stop do
         --print('mainloop iter')
@@ -185,12 +238,7 @@ local function mainloop()
                         break
                     end
 
-                    if scancode == 'left' then
-                        -- Как передать импульс или силу телу?
-                        -- Организация обертки над Бурундучком.
-                        -- Минимальное количество функций.
-                        print('left')
-                    end
+                    moveBody(scancode)
 
                     --msg = '%{yellow}keypressed '
                     --print(colorize(msg .. key .. ' ' .. scancode))
@@ -218,8 +266,10 @@ local function mainloop()
         end
 
         --pw.update(diff)
-
         --render()
+
+        -- UPDATE HERE PLEASE
+        pw.eachBody(bodyIter)
 
         local timeout = 0.0001
         love.timer.sleep(timeout)
