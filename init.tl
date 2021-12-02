@@ -209,20 +209,28 @@ end
 ```
 --]]
 
--- Преобразование типов между pw.Body и cpBody
---local function eachBody(b: pw.Body)
+local bodyIter: pw.EachSpaceBodyIter
+local shapeIter: pw.EachBodyShapeIter
+
+local function eachShape(b: Cm.cpBody, _: Cm.cpShape)
+    print('eachShape')
+    local body = pw.cpBody2Body(b)
+    print(colorize('%{magenta}body: ' .. body:getInfoStr()))
+end
+
 local function eachBody(b: Cm.cpBody)
     local body = pw.cpBody2Body(b)
     if body then
         --print(colorize('%{green}' .. inspect(body)))
         print(colorize('%{yellow}' .. body:getInfoStr()))
+        pw.eachBodyShape(b, shapeIter)
     else
         --print(colorize('%{red}body is nil ' .. debug.traceback()))
     end
 end
 
-local bodyIter = pw.newEachSpaceBodyIter(eachBody)
-local shapeIter = pw.newEachBodyShapeIter()
+bodyIter = pw.newEachSpaceBodyIter(eachBody)
+shapeIter = pw.newEachBodyShapeIter(eachShape)
 
 local function mainloop()
     while not is_stop do

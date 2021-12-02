@@ -209,20 +209,28 @@ end
 
 
 
+local bodyIter
+local shapeIter
 
+local function eachShape(b, _)
+   print('eachShape')
+   local body = pw.cpBody2Body(b)
+   print(colorize('%{magenta}body: ' .. body:getInfoStr()))
+end
 
 local function eachBody(b)
    local body = pw.cpBody2Body(b)
    if body then
 
       print(colorize('%{yellow}' .. body:getInfoStr()))
+      pw.eachBodyShape(b, shapeIter)
    else
 
    end
 end
 
-local bodyIter = pw.newEachSpaceBodyIter(eachBody)
-local shapeIter = pw.newEachBodyShapeIter()
+bodyIter = pw.newEachSpaceBodyIter(eachBody)
+shapeIter = pw.newEachBodyShapeIter(eachShape)
 
 local function mainloop()
    while not is_stop do
