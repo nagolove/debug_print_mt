@@ -135,6 +135,8 @@ local function init()
 
    pw.newBoxBody(200, 500)
    print('pw.getBodies()', inspect(pw.getBodies()))
+
+
 end
 
 
@@ -160,7 +162,7 @@ local function render()
 
 
 
-      pw.render()
+
    end
 end
 
@@ -210,10 +212,17 @@ end
 
 
 local function eachBody(b)
+   local body = pw.cpBody2Body(b)
+   if body then
 
+      print(colorize('%{yellow}' .. body:getInfoStr()))
+   else
+
+   end
 end
 
-local bodyIter = pw.newEachBodyIter(eachBody)
+local bodyIter = pw.newEachSpaceBodyIter(eachBody)
+local shapeIter = pw.newEachBodyShapeIter()
 
 local function mainloop()
    while not is_stop do
@@ -265,11 +274,13 @@ local function mainloop()
          render()
       end
 
+      pw.update(diff)
 
 
 
-
-      pw.eachBody(bodyIter)
+      print('------------------------------------------------')
+      pw.eachSpaceBody(bodyIter)
+      print('------------------------------------------------')
 
       local timeout = 0.0001
       love.timer.sleep(timeout)

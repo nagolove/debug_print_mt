@@ -135,6 +135,8 @@ local function init()
 
     pw.newBoxBody(200, 500)
     print('pw.getBodies()', inspect(pw.getBodies()))
+    --print('os.exit')
+    --os.exit(1)
 end
 
 --[[
@@ -160,7 +162,7 @@ local function render()
         --pipeline:push(rad)
         --pipeline:close()
 
-        pw.render()
+        --pw.render()
     end
 end
 
@@ -210,10 +212,17 @@ end
 -- Преобразование типов между pw.Body и cpBody
 --local function eachBody(b: pw.Body)
 local function eachBody(b: Cm.cpBody)
-    --print(colorize('%{yellow}' .. b:getInfoStr()))
+    local body = pw.cpBody2Body(b)
+    if body then
+        --print(colorize('%{green}' .. inspect(body)))
+        print(colorize('%{yellow}' .. body:getInfoStr()))
+    else
+        --print(colorize('%{red}body is nil ' .. debug.traceback()))
+    end
 end
 
-local bodyIter = pw.newEachBodyIter(eachBody)
+local bodyIter = pw.newEachSpaceBodyIter(eachBody)
+local shapeIter = pw.newEachBodyShapeIter()
 
 local function mainloop()
     while not is_stop do
@@ -265,11 +274,13 @@ local function mainloop()
             render()
         end
 
-        --pw.update(diff)
+        pw.update(diff)
         --render()
 
         -- UPDATE HERE PLEASE
-        pw.eachBody(bodyIter)
+        print('------------------------------------------------')
+        pw.eachSpaceBody(bodyIter)
+        print('------------------------------------------------')
 
         local timeout = 0.0001
         love.timer.sleep(timeout)
