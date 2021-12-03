@@ -62,7 +62,16 @@ local pw = require("physics_wrapper")
 
 
 
+local joystick = love.joystick
+local joy
+
 local function init()
+   for _, joy in ipairs(joystick.getJoysticks()) do
+      print(colorize('%{green}' .. inspect(joy)))
+   end
+   joy = joystick.getJoysticks()[1]
+   print(colorize('%{green}avaible ' .. joy:getButtonCount() .. ' buttons'))
+   print(colorize('%{green}hats num: ' .. joy:getHatCount()))
 
 
 
@@ -186,43 +195,20 @@ local function moveBody(scancode)
    end
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 local bodyIter
 local shapeIter
 
 local function eachShape(b, _)
-   print('eachShape')
-   local body = pw.cpBody2Body(b)
-   print(colorize('%{magenta}body: ' .. body:getInfoStr()))
+
+
+
 end
 
 local function eachBody(b)
    local body = pw.cpBody2Body(b)
    if body then
 
-      print(colorize('%{yellow}' .. body:getInfoStr()))
+
       pw.eachBodyShape(b, shapeIter)
    else
 
@@ -231,6 +217,43 @@ end
 
 bodyIter = pw.newEachSpaceBodyIter(eachBody)
 shapeIter = pw.newEachBodyShapeIter(eachShape)
+
+local joy_msg_prev = ""
+local joy_msg = ""
+
+local joy_pressed_prev = ''
+local joy_pressed = ''
+
+local joy_hat_prev = ''
+local joy_hat = ''
+
+local function joystickUpdate()
+   local axes = { joy:getAxes() }
+   joy_msg_prev = joy_msg
+   joy_msg = inspect(axes)
+   if joy_msg_prev ~= joy_msg then
+      print(inspect(axes))
+   end
+
+   local buttons_num = joy:getButtonCount()
+   local pressed = {}
+   for i = 1, buttons_num do
+
+      pressed[i] = joy:isDown(i)
+   end
+   joy_pressed_prev = joy_pressed
+   joy_pressed = inspect(pressed)
+   if joy_pressed_prev ~= joy_pressed then
+      print('pressed:', joy_pressed_prev)
+   end
+
+   joy_hat_prev = joy_hat
+   local hat_num = 1
+   joy_hat = joy:getHat(hat_num)
+   if joy_hat_prev ~= joy_hat then
+      print('hat direction:', joy_hat)
+   end
+end
 
 local function mainloop()
    while not is_stop do
@@ -286,9 +309,10 @@ local function mainloop()
 
 
 
-      print('------------------------------------------------')
+
       pw.eachSpaceBody(bodyIter)
-      print('------------------------------------------------')
+      joystickUpdate()
+
 
       local timeout = 0.0001
       love.timer.sleep(timeout)

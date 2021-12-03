@@ -62,7 +62,16 @@ local pw = require "physics_wrapper"
 -- Сейчас функция компилируется один раз при загрузке файла исходного текста
 -- потока.
 
+local joystick = love.joystick
+local joy: love.joystick.Joystick
+
 local function init()
+    for _, joy in ipairs(joystick.getJoysticks()) do
+        print(colorize('%{green}' .. inspect(joy)))
+    end
+    joy = joystick.getJoysticks()[1]
+    print(colorize('%{green}avaible ' .. joy:getButtonCount() .. ' buttons'))
+    print(colorize('%{green}hats num: ' .. joy:getHatCount()))
     --[[
     i18n.set('en.welcome', 'welcome to this program')
     i18n.load({
@@ -186,43 +195,20 @@ local function moveBody(scancode: string)
     end
 end
 
---[[
-Привет. Вопрос по luajit. Как лучше передать таблицу(с установленной метатаблицей) через void* указатель data?
-Заголовочный файл для ffi:
-```
-typedef void (*cpSpaceBodyIteratorFunc)(cpBody *body, void *data);
-void cpSpaceEachBody(cpSpace *space, cpSpaceBodyIteratorFunc func, void *data);
-```
-Пример:
-```
-local eachBody_C = ffi.cast("cpSpaceBodyIteratorFunc", function(body, data)
-    -- тут хочу использовать data как табличку
-end)
-
--- Это не нужно наверно
-local internal_data = ffi.new('char[1024]')
-local void_internal_data = ffi.cast('void*', internal_data)
-
-local function foo()
-    C.cpSpaceEachBody(space, eachBody_C, void_internal_data)
-end
-```
---]]
-
 local bodyIter: pw.EachSpaceBodyIter
 local shapeIter: pw.EachBodyShapeIter
 
 local function eachShape(b: Cm.cpBody, _: Cm.cpShape)
-    print('eachShape')
-    local body = pw.cpBody2Body(b)
-    print(colorize('%{magenta}body: ' .. body:getInfoStr()))
+    --print('eachShape')
+    --local body = pw.cpBody2Body(b)
+    --print(colorize('%{magenta}body: ' .. body:getInfoStr()))
 end
 
 local function eachBody(b: Cm.cpBody)
     local body = pw.cpBody2Body(b)
     if body then
         --print(colorize('%{green}' .. inspect(body)))
-        print(colorize('%{yellow}' .. body:getInfoStr()))
+        --print(colorize('%{yellow}' .. body:getInfoStr()))
         pw.eachBodyShape(b, shapeIter)
     else
         --print(colorize('%{red}body is nil ' .. debug.traceback()))
@@ -231,6 +217,43 @@ end
 
 bodyIter = pw.newEachSpaceBodyIter(eachBody)
 shapeIter = pw.newEachBodyShapeIter(eachShape)
+
+local joy_msg_prev: string = ""
+local joy_msg: string = ""
+
+local joy_pressed_prev: string = ''
+local joy_pressed: string = ''
+
+local joy_hat_prev: string = ''
+local joy_hat: string = ''
+
+local function joystickUpdate()
+    local axes = {joy:getAxes()}
+    joy_msg_prev = joy_msg
+    joy_msg = inspect(axes)
+    if joy_msg_prev ~= joy_msg then
+        print(inspect(axes))
+    end
+
+    local buttons_num = joy:getButtonCount()
+    local pressed = {}
+    for i = 1, buttons_num do
+        --local pressed = {joy:isDown(
+        pressed[i] = joy:isDown(i)
+    end
+    joy_pressed_prev = joy_pressed
+    joy_pressed = inspect(pressed)
+    if joy_pressed_prev ~= joy_pressed then
+        print('pressed:', joy_pressed_prev)
+    end
+
+    joy_hat_prev = joy_hat
+    local hat_num = 1
+    joy_hat = joy:getHat(hat_num)
+    if joy_hat_prev ~= joy_hat then
+        print('hat direction:', joy_hat)
+    end
+end
 
 local function mainloop()
     while not is_stop do
@@ -286,9 +309,10 @@ local function mainloop()
         --render()
 
         -- UPDATE HERE PLEASE
-        print('------------------------------------------------')
+        --print('------------------------------------------------')
         pw.eachSpaceBody(bodyIter)
-        print('------------------------------------------------')
+        joystickUpdate()
+        --print('------------------------------------------------')
 
         local timeout = 0.0001
         love.timer.sleep(timeout)
