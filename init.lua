@@ -1,4 +1,5 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local colorize = require('ansicolors2').ansicolors
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local table = _tl_compat and _tl_compat.table or table
+local colorize = require('ansicolors2').ansicolors
 local inspect = require("inspect")
 print(colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 
@@ -7,10 +8,6 @@ require("love_inc").require()
 require('pipeline')
 local Cm = require('chipmunk')
 
-
-
-
-
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 
 
@@ -18,8 +15,8 @@ love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 local event_channel = love.thread.getChannel("event_channel")
 local main_channel = love.thread.getChannel("main_channel")
 
-
-
+local bodyIter
+local shapeIter
 
 
 
@@ -92,6 +89,16 @@ local function init()
 
 
    local rendercode = [[
+    local col = {1, 1, 1, 1}
+    --love.graphics.setColor(col)
+    while true do
+        --love.graphics.setColor(col)
+        coroutine.yield()
+    end
+    ]]
+   pipeline:pushCode("rect", rendercode)
+
+   rendercode = [[
     while true do
         local w, h = love.graphics.getDimensions()
         local x, y = math.random() * w, math.random() * h
@@ -124,6 +131,20 @@ local function init()
    pipeline:pushCode('clear', [[
     while true do
         love.graphics.clear{0.5, 0.5, 0.5}
+        coroutine.yield()
+    end
+    ]])
+
+   pipeline:pushCode("poly_shape", [[
+    local col = {1, 0, 0, 1}
+    --love.graphics.setColor(col)
+    local inspect = require "inspect"
+    while true do
+        love.graphics.setColor(col)
+        local verts = graphic_command_channel:demand()
+        --print('poly_shape: verts', inspect(verts))
+        --love.graphics.rectangle('fill', 0, 0, 1000, 1000)
+        love.graphics.polygon('fill', verts)
         coroutine.yield()
     end
     ]])
@@ -175,6 +196,7 @@ local function render()
 
 
 
+      pw.eachSpaceBody(bodyIter)
    end
 end
 
@@ -198,12 +220,38 @@ local function moveBody(scancode)
    end
 end
 
-local bodyIter
-local shapeIter
+local function eachShape(b, shape)
 
-local function eachShape(b, _)
-   print('eachShape call')
 
+
+
+
+
+
+
+   local shape_type = pw.polyShapeGetType(shape)
+
+   print('shape_type', shape_type)
+
+   if shape_type == pw.CP_POLY_SHAPE then
+      print('I am poly.')
+
+
+      local num = pw.polyShapeGetCount(shape)
+      local verts = {}
+      for i = 0, num - 1 do
+
+         local vert = pw.polyShapeGetVert(shape, i)
+
+
+
+         table.insert(verts, vert.x)
+         table.insert(verts, vert.y)
+      end
+      pipeline:open('poly_shape')
+      pipeline:push(verts)
+      pipeline:close()
+   end
 
 end
 
@@ -349,7 +397,6 @@ local function mainloop()
 
 
       print('------------------------------------------------')
-      pw.eachSpaceBody(bodyIter)
       print('------------------------------------------------')
       joystickUpdate()
 

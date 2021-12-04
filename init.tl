@@ -1,3 +1,4 @@
+-- vim: fdm=marker
 local colorize = require 'ansicolors2'.ansicolors
 local inspect = require "inspect"
 print(colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
@@ -7,22 +8,17 @@ require "love_inc".require()
 require 'pipeline'
 local Cm = require 'chipmunk'
 
---Cm.C.cpInitChipmunk()
---local v = Cm.cpvzero()
---print(v)
-
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 --local i18n = require "i18n"
 --local format = string.format
 
 local event_channel = love.thread.getChannel("event_channel")
 local main_channel = love.thread.getChannel("main_channel")
---local draw_ready_channel = love.thread.getChannel("draw_ready_channel")
---local graphic_command_channel = love.thread.getChannel("graphic_command_channel")
---local graphic_code_channel = love.thread.getChannel("graphic_code_channel")
 
---[[
+local bodyIter: pw.EachSpaceBodyIter
+local shapeIter: pw.EachBodyShapeIter
 
+--[[ {{{
 -- chipmunk.d.tl
 
 local record Chipmunk
@@ -48,6 +44,7 @@ space.iterations = 20
 space.gravity.x = 0
 space.gravity.y = -100
 
+-- }}}
 --]]
 
 local last_render: number
@@ -92,6 +89,16 @@ local function init()
     --]]
 
     local rendercode = [[
+    local col = {1, 1, 1, 1}
+    --love.graphics.setColor(col)
+    while true do
+        --love.graphics.setColor(col)
+        coroutine.yield()
+    end
+    ]]
+    pipeline:pushCode("rect", rendercode)
+
+    rendercode = [[
     while true do
         local w, h = love.graphics.getDimensions()
         local x, y = math.random() * w, math.random() * h
@@ -124,6 +131,20 @@ local function init()
     pipeline:pushCode('clear', [[
     while true do
         love.graphics.clear{0.5, 0.5, 0.5}
+        coroutine.yield()
+    end
+    ]])
+
+    pipeline:pushCode("poly_shape", [[
+    local col = {1, 0, 0, 1}
+    --love.graphics.setColor(col)
+    local inspect = require "inspect"
+    while true do
+        love.graphics.setColor(col)
+        local verts = graphic_command_channel:demand()
+        --print('poly_shape: verts', inspect(verts))
+        --love.graphics.rectangle('fill', 0, 0, 1000, 1000)
+        love.graphics.polygon('fill', verts)
         coroutine.yield()
     end
     ]])
@@ -175,6 +196,7 @@ local function render()
         --pipeline:close()
 
         --pw.render()
+        pw.eachSpaceBody(bodyIter)
     end
 end
 
@@ -198,13 +220,38 @@ local function moveBody(scancode: string)
     end
 end
 
-local bodyIter: pw.EachSpaceBodyIter
-local shapeIter: pw.EachBodyShapeIter
-
-local function eachShape(b: Cm.cpBody, _: Cm.cpShape)
-    print('eachShape call')
+local function eachShape(b: Cm.cpBody, shape: Cm.cpShape)
+    --print('eachShape call')
     --local body = pw.cpBody2Body(b)
     --print(colorize('%{magenta}body: ' .. body:getInfoStr()))
+
+    -- Проблема в использовании ffi функций в Teal коде.
+    -- Куда переместить вызов?
+    -- В какие абстракции облечь?
+    --local shape_type = shape.klass_private.type
+    local shape_type = pw.polyShapeGetType(shape)
+    --if shape_type == C.CP_POLY_SHAPE then
+    print('shape_type', shape_type)
+    --print('CP_POLY_SHAPE', CP_POLY_SHAPE)
+    if shape_type == pw.CP_POLY_SHAPE then
+        --print('I am poly.')
+        --local poly_shape = fff.cast('cpPolyShape*', shape)
+        --local num = C.cpPolyShapeGetCount(shape)
+        local num = pw.polyShapeGetCount(shape)
+        local verts = {}
+        for i = 0, num - 1 do
+            --local vert = C.cpPolyShapeGetVert(shape, i)
+            local vert = pw.polyShapeGetVert(shape, i)
+            --print(inspect(vert))
+            --print('x, y', vert.x, vert.y)
+            table.insert(verts, vert.x)
+            table.insert(verts, vert.y)
+        end
+        pipeline:open('poly_shape')
+        pipeline:push(verts)
+        pipeline:close()
+    end
+    --]]
 end
 
 local function eachBody(b: Cm.cpBody)
@@ -349,7 +396,6 @@ local function mainloop()
 
         -- UPDATE HERE PLEASE
         print('------------------------------------------------')
-        pw.eachSpaceBody(bodyIter)
         print('------------------------------------------------')
         joystickUpdate()
 
