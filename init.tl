@@ -70,8 +70,11 @@ local function init()
         print(colorize('%{green}' .. inspect(joy)))
     end
     joy = joystick.getJoysticks()[1]
-    print(colorize('%{green}avaible ' .. joy:getButtonCount() .. ' buttons'))
-    print(colorize('%{green}hats num: ' .. joy:getHatCount()))
+    if joy then
+        print(colorize('%{green}avaible ' .. joy:getButtonCount() .. ' buttons'))
+        print(colorize('%{green}hats num: ' .. joy:getHatCount()))
+    end
+
     --[[
     i18n.set('en.welcome', 'welcome to this program')
     i18n.load({
@@ -199,7 +202,7 @@ local bodyIter: pw.EachSpaceBodyIter
 local shapeIter: pw.EachBodyShapeIter
 
 local function eachShape(b: Cm.cpBody, _: Cm.cpShape)
-    --print('eachShape')
+    print('eachShape')
     --local body = pw.cpBody2Body(b)
     --print(colorize('%{magenta}body: ' .. body:getInfoStr()))
 end
@@ -218,40 +221,76 @@ end
 bodyIter = pw.newEachSpaceBodyIter(eachBody)
 shapeIter = pw.newEachBodyShapeIter(eachShape)
 
-local joy_msg_prev: string = ""
-local joy_msg: string = ""
+local joy_msg_prev: {number} = {}
+local joy_msg: {number} = {}
 
-local joy_pressed_prev: string = ''
-local joy_pressed: string = ''
+local joy_pressed_prev: {boolean} = {}
+local joy_pressed: {boolean} = {}
 
-local joy_hat_prev: string = ''
-local joy_hat: string = ''
+local joy_hat_prev: joystick.GamepadButton
+local joy_hat: joystick.GamepadButton
 
 local function joystickUpdate()
+    if not joy then
+        return
+    end
+
     local axes = {joy:getAxes()}
     joy_msg_prev = joy_msg
-    joy_msg = inspect(axes)
-    if joy_msg_prev ~= joy_msg then
-        print(inspect(axes))
+    joy_msg = axes
+
+    local msg = ""
+    local colored_once = false
+    for k, v in ipairs(joy_msg) do
+        if v == joy_msg_prev[k] then
+            msg = msg .. colorize('%{white}' .. tostring(v) .. ' ')
+        else
+            colored_once = true
+            msg = msg .. colorize('%{red}' ..tostring(v) .. ' ')
+        end
+    end
+    if colored_once then
+        print(msg)
     end
 
     local buttons_num = joy:getButtonCount()
     local pressed = {}
     for i = 1, buttons_num do
-        --local pressed = {joy:isDown(
         pressed[i] = joy:isDown(i)
     end
+
     joy_pressed_prev = joy_pressed
-    joy_pressed = inspect(pressed)
-    if joy_pressed_prev ~= joy_pressed then
-        print('pressed:', joy_pressed_prev)
+    joy_pressed = pressed
+
+    msg = ""
+    colored_once = false
+    for k, v in ipairs(joy_pressed) do
+        if v == joy_pressed_prev[k] then
+            msg = msg .. colorize('%{white}' ..tostring(v) .. ' ')
+        else
+            colored_once = true
+            msg = msg .. colorize('%{red}' ..tostring(v) .. ' ')
+        end
+    end
+    if colored_once then
+        print('pressed:', msg)
     end
 
-    joy_hat_prev = joy_hat
+    -- Здесь подсветка кажется не работает как нужно
     local hat_num = 1
+    joy_hat_prev = joy_hat
     joy_hat = joy:getHat(hat_num)
-    if joy_hat_prev ~= joy_hat then
-        print('hat direction:', joy_hat)
+
+    colored_once = false
+    msg = ''
+    if joy_hat_prev == joy_hat then
+        msg = msg .. colorize('%{white}' .. joy_hat)
+    else
+        colored_once = true
+        msg = msg .. colorize('%{red}' .. joy_hat)
+    end
+    if colored_once then
+        print('hat direction:', msg)
     end
 end
 
@@ -310,9 +349,9 @@ local function mainloop()
 
         -- UPDATE HERE PLEASE
         --print('------------------------------------------------')
-        pw.eachSpaceBody(bodyIter)
-        joystickUpdate()
+        --pw.eachSpaceBody(bodyIter)
         --print('------------------------------------------------')
+        joystickUpdate()
 
         local timeout = 0.0001
         love.timer.sleep(timeout)
