@@ -202,7 +202,7 @@ local bodyIter
 local shapeIter
 
 local function eachShape(b, _)
-   print('eachShape')
+   print('eachShape call')
 
 
 end
@@ -348,9 +348,9 @@ local function mainloop()
 
 
 
-
-
-
+      print('------------------------------------------------')
+      pw.eachSpaceBody(bodyIter)
+      print('------------------------------------------------')
       joystickUpdate()
 
       local timeout = 0.0001

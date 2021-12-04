@@ -202,7 +202,7 @@ local bodyIter: pw.EachSpaceBodyIter
 local shapeIter: pw.EachBodyShapeIter
 
 local function eachShape(b: Cm.cpBody, _: Cm.cpShape)
-    print('eachShape')
+    print('eachShape call')
     --local body = pw.cpBody2Body(b)
     --print(colorize('%{magenta}body: ' .. body:getInfoStr()))
 end
@@ -348,9 +348,9 @@ local function mainloop()
         --render()
 
         -- UPDATE HERE PLEASE
-        --print('------------------------------------------------')
-        --pw.eachSpaceBody(bodyIter)
-        --print('------------------------------------------------')
+        print('------------------------------------------------')
+        pw.eachSpaceBody(bodyIter)
+        print('------------------------------------------------')
         joystickUpdate()
 
         local timeout = 0.0001
