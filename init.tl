@@ -1,16 +1,22 @@
 -- vim: fdm=marker
 local colorize = require 'ansicolors2'.ansicolors
 local inspect = require "inspect"
+
+
 print(colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 
+require 'joystate'
 require "love"
 require "love_inc".require()
 require 'pipeline'
+
+local joystate = require 'joystate'
 local Cm = require 'chipmunk'
 
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 --local i18n = require "i18n"
 --local format = string.format
+local joystick = love.joystick
 
 local event_channel = love.thread.getChannel("event_channel")
 local main_channel = love.thread.getChannel("main_channel")
@@ -59,8 +65,8 @@ local pw = require "physics_wrapper"
 -- Сейчас функция компилируется один раз при загрузке файла исходного текста
 -- потока.
 
-local joystick = love.joystick
 local joy: love.joystick.Joystick
+local joyState: JoyState
 
 local function init()
     for _, joy in ipairs(joystick.getJoysticks()) do
@@ -71,6 +77,8 @@ local function init()
         print(colorize('%{green}avaible ' .. joy:getButtonCount() .. ' buttons'))
         print(colorize('%{green}hats num: ' .. joy:getHatCount()))
     end
+
+    joyState = JoyState.new(joy)
 
     --[[
     i18n.set('en.welcome', 'welcome to this program')
@@ -231,7 +239,7 @@ local function eachShape(b: Cm.cpBody, shape: Cm.cpShape)
     --local shape_type = shape.klass_private.type
     local shape_type = pw.polyShapeGetType(shape)
     --if shape_type == C.CP_POLY_SHAPE then
-    print('shape_type', shape_type)
+    --print('shape_type', shape_type)
     --print('CP_POLY_SHAPE', CP_POLY_SHAPE)
     if shape_type == pw.CP_POLY_SHAPE then
         --print('I am poly.')
@@ -267,79 +275,6 @@ end
 
 bodyIter = pw.newEachSpaceBodyIter(eachBody)
 shapeIter = pw.newEachBodyShapeIter(eachShape)
-
-local joy_msg_prev: {number} = {}
-local joy_msg: {number} = {}
-
-local joy_pressed_prev: {boolean} = {}
-local joy_pressed: {boolean} = {}
-
-local joy_hat_prev: joystick.GamepadButton
-local joy_hat: joystick.GamepadButton
-
-local function joystickUpdate()
-    if not joy then
-        return
-    end
-
-    local axes = {joy:getAxes()}
-    joy_msg_prev = joy_msg
-    joy_msg = axes
-
-    local msg = ""
-    local colored_once = false
-    for k, v in ipairs(joy_msg) do
-        if v == joy_msg_prev[k] then
-            msg = msg .. colorize('%{white}' .. tostring(v) .. ' ')
-        else
-            colored_once = true
-            msg = msg .. colorize('%{red}' ..tostring(v) .. ' ')
-        end
-    end
-    if colored_once then
-        print(msg)
-    end
-
-    local buttons_num = joy:getButtonCount()
-    local pressed = {}
-    for i = 1, buttons_num do
-        pressed[i] = joy:isDown(i)
-    end
-
-    joy_pressed_prev = joy_pressed
-    joy_pressed = pressed
-
-    msg = ""
-    colored_once = false
-    for k, v in ipairs(joy_pressed) do
-        if v == joy_pressed_prev[k] then
-            msg = msg .. colorize('%{white}' ..tostring(v) .. ' ')
-        else
-            colored_once = true
-            msg = msg .. colorize('%{red}' ..tostring(v) .. ' ')
-        end
-    end
-    if colored_once then
-        print('pressed:', msg)
-    end
-
-    -- Здесь подсветка кажется не работает как нужно
-    local hat_num = 1
-    joy_hat_prev = joy_hat
-    joy_hat = joy:getHat(hat_num)
-
-    colored_once = false
-    msg = ''
-    if joy_hat_prev == joy_hat then
-        msg = msg .. colorize('%{white}' .. joy_hat)
-    else
-        colored_once = true
-        msg = msg .. colorize('%{red}' .. joy_hat)
-    end
-    if colored_once then
-        print('hat direction:', msg)
-    end
-end
 
 local function mainloop()
     while not is_stop do
@@ -395,9 +330,12 @@ local function mainloop()
         --render()
 
         -- UPDATE HERE PLEASE
-        print('------------------------------------------------')
-        print('------------------------------------------------')
-        joystickUpdate()
+        --print('------------------------------------------------')
+        --print('------------------------------------------------')
+        joyState:update()
+        if joyState.state and joyState.state ~= "" then
+            print(joyState.state)
+        end
 
         local timeout = 0.0001
         love.timer.sleep(timeout)
