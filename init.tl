@@ -10,7 +10,7 @@ require "love"
 require "love_inc".require()
 require 'pipeline'
 
-local joystate = require 'joystate'
+--local joystate = require 'joystate'
 local Cm = require 'chipmunk'
 
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
@@ -23,6 +23,8 @@ local main_channel = love.thread.getChannel("main_channel")
 
 local bodyIter: pw.EachSpaceBodyIter
 local shapeIter: pw.EachBodyShapeIter
+
+local tank: pw.Body
 
 --[[ {{{
 -- chipmunk.d.tl
@@ -174,7 +176,9 @@ local function init()
 
     pw.init(pipeline)
 
-    pw.newBoxBody(200, 500)
+    -- Почему не указывается позиция?
+    tank = pw.newBoxBody(200, 500)
+
     print('pw.getBodies()', inspect(pw.getBodies()))
 end
 
@@ -207,24 +211,6 @@ local function render()
 end
 
 local is_stop = false
-
-local function moveBody(scancode: string)
-    if scancode == 'left' then
-        -- Как передать импульс или силу телу?
-        -- Организация обертки над Бурундучком.
-        -- Минимальное количество функций.
-        print('left')
-    end
-    if scancode == 'right' then
-        print('right')
-    end
-    if scancode == 'up' then
-        print('up')
-    end
-    if scancode == 'down' then
-        print('down')
-    end
-end
 
 local function eachShape(b: Cm.cpBody, shape: Cm.cpShape)
     --print('eachShape call')
@@ -276,14 +262,19 @@ shapeIter = pw.newEachBodyShapeIter(eachShape)
 
 local function applyInput()
     local leftBtn, rightBtn, downBtn, upBtn = 3, 2, 1, 4
+    local k = 100.
     if joy then
         if joy:isDown(leftBtn) then
+            tank:applyImpulse(1. * k, 0)
             print('left')
         elseif joy:isDown(rightBtn) then
+            tank:applyImpulse(-1. * k, 0)
             print('right')
         elseif joy:isDown(upBtn) then
+            tank:applyImpulse(0, 1 * k)
             print('up')
         elseif joy:isDown(downBtn) then
+            tank:applyImpulse(0, -1 * k)
             print('down')
         end
     end
@@ -311,8 +302,6 @@ local function mainloop()
                         print(colorize('%{blue}escape pressed'))
                         break
                     end
-
-                    moveBody(scancode)
 
                     --msg = '%{yellow}keypressed '
                     --print(colorize(msg .. key .. ' ' .. scancode))
