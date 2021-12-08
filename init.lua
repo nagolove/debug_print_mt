@@ -176,8 +176,6 @@ local function init()
 
    pw.newBoxBody(200, 500)
    print('pw.getBodies()', inspect(pw.getBodies()))
-
-
 end
 
 
@@ -276,6 +274,21 @@ end
 bodyIter = pw.newEachSpaceBodyIter(eachBody)
 shapeIter = pw.newEachBodyShapeIter(eachShape)
 
+local function applyInput()
+   local leftBtn, rightBtn, downBtn, upBtn = 3, 2, 1, 4
+   if joy then
+      if joy:isDown(leftBtn) then
+         print('left')
+      elseif joy:isDown(rightBtn) then
+         print('right')
+      elseif joy:isDown(upBtn) then
+         print('up')
+      elseif joy:isDown(downBtn) then
+         print('down')
+      end
+   end
+end
+
 local function mainloop()
    while not is_stop do
 
@@ -326,9 +339,9 @@ local function mainloop()
          render()
       end
 
+
       pw.update(diff)
-
-
+      applyInput()
 
 
 
