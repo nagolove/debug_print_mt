@@ -154,6 +154,9 @@ local function init()
         local verts = graphic_command_channel:demand()
         --print('poly_shape: verts', inspect(verts))
         --love.graphics.rectangle('fill', 0, 0, 1000, 1000)
+
+        print('I am rendered')
+
         love.graphics.polygon('fill', verts)
         coroutine.yield()
     end
@@ -239,8 +242,10 @@ local function eachShape(b, shape)
          table.insert(verts, vert.x)
          table.insert(verts, vert.y)
       end
+      print('shape', shape)
       pipeline:open('poly_shape')
       pipeline:push(verts)
+      print('verts', inspect(verts))
       pipeline:close()
    end
 
@@ -262,7 +267,7 @@ shapeIter = pw.newEachBodyShapeIter(eachShape)
 
 local function applyInput()
    local leftBtn, rightBtn, downBtn, upBtn = 3, 2, 1, 4
-   local k = 100.
+   local k = 0.1
    if joy then
       if joy:isDown(leftBtn) then
          tank:applyImpulse(1. * k, 0)
@@ -277,6 +282,13 @@ local function applyInput()
          tank:applyImpulse(0, -1 * k)
          print('down')
       end
+   end
+end
+
+local function updateJoyState()
+   joyState:update()
+   if joyState.state and joyState.state ~= "" then
+      print(joyState.state)
    end
 end
 
@@ -329,15 +341,18 @@ local function mainloop()
       end
 
 
+
+
       pw.update(diff)
+
       applyInput()
 
 
 
-      joyState:update()
-      if joyState.state and joyState.state ~= "" then
-         print(joyState.state)
-      end
+      local pos = tank:getPos()
+      print('tank pos', pos.x, pos.y)
+
+      updateJoyState()
 
       local timeout = 0.0001
       love.timer.sleep(timeout)
