@@ -1,7 +1,10 @@
+-- vim: set colorcolumn=85
 -- vim: fdm=marker
+
 local colorize = require 'ansicolors2'.ansicolors
 local inspect = require "inspect"
-
+local dprint = require 'debug_print'
+local debug_print = dprint.debug_print
 
 print(colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 
@@ -70,33 +73,22 @@ local pw = require "physics_wrapper"
 local joy: love.joystick.Joystick
 local joyState: JoyState
 
-local function init()
+local function initJoy()
     for _, joy in ipairs(joystick.getJoysticks()) do
-        print(colorize('%{green}' .. inspect(joy)))
+        debug_print("joy", colorize('%{green}' .. inspect(joy)))
     end
     joy = joystick.getJoysticks()[1]
     if joy then
-        print(colorize('%{green}avaible ' .. joy:getButtonCount() .. ' buttons'))
-        print(colorize('%{green}hats num: ' .. joy:getHatCount()))
+        debug_print("joy", colorize('%{green}avaible ' .. joy:getButtonCount() .. ' buttons'))
+        debug_print("joy", colorize('%{green}hats num: ' .. joy:getHatCount()))
     end
-
     joyState = JoyState.new(joy)
+end
 
-    --[[
-    i18n.set('en.welcome', 'welcome to this program')
-    i18n.load({
-        en = {
-            good_bye = "good-bye!",
-            age_msg = "your age is %{age}.",
-            phone_msg = {
-                one = "you have one new message.",
-                other = "you have %{count} new messages."
-            }
-        }
-    })
-    print("translated", i18n.translate('welcome'))
-    print("translated", i18n('welcome'))
-    --]]
+local function init()
+    --dprint.set_filter { ""}
+
+    initJoy()
 
     local rendercode = [[
     local col = {1, 1, 1, 1}
@@ -155,14 +147,14 @@ local function init()
         --print('poly_shape: verts', inspect(verts))
         --love.graphics.rectangle('fill', 0, 0, 1000, 1000)
 
-        print('I am rendered')
+        --print('I am rendered')
 
         love.graphics.polygon('fill', verts)
         coroutine.yield()
     end
     ]])
 
-    --[[
+    --[[  {{{
     -- Добавлять-ли такую функцию? Будет использоваться?
     -- Стоимость реализации и возможности применения.
     pipeline:pushCodes({
@@ -173,6 +165,7 @@ local function init()
         {},
         {},
     })
+    }}}
     --]]
 
     last_render = love.timer.getTime()
@@ -182,7 +175,7 @@ local function init()
     -- Почему не указывается позиция?
     tank = pw.newBoxBody(200, 500)
 
-    print('pw.getBodies()', inspect(pw.getBodies()))
+    debug_print("phys", 'pw.getBodies()', inspect(pw.getBodies()))
 end
 
 --[[
@@ -242,10 +235,10 @@ local function eachShape(b: Cm.cpBody, shape: Cm.cpShape)
             table.insert(verts, vert.x)
             table.insert(verts, vert.y)
         end
-        print('shape', shape)
+        --print('shape', shape)
         pipeline:open('poly_shape')
         pipeline:push(verts)
-        print('verts', inspect(verts))
+        --print('verts', inspect(verts))
         pipeline:close()
     end
     --]]
@@ -271,16 +264,16 @@ local function applyInput()
     if joy then
         if joy:isDown(leftBtn) then
             tank:applyImpulse(1. * k, 0)
-            print('left')
+            --print('left')
         elseif joy:isDown(rightBtn) then
             tank:applyImpulse(-1. * k, 0)
-            print('right')
+            --print('right')
         elseif joy:isDown(upBtn) then
             tank:applyImpulse(0, 1 * k)
-            print('up')
+            --print('up')
         elseif joy:isDown(downBtn) then
             tank:applyImpulse(0, -1 * k)
-            print('down')
+            --print('down')
         end
     end
 end
@@ -350,7 +343,7 @@ local function mainloop()
         --print('------------------------------------------------')
         --print(tank:getInfoStr())
         local pos = tank:getPos()
-        print('tank pos', pos.x, pos.y)
+        --print('tank pos', pos.x, pos.y)
 
         updateJoyState()
 

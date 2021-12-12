@@ -70,6 +70,7 @@ local pw = require("physics_wrapper")
 local joy
 local joyState
 
+
 local function init()
    for _, joy in ipairs(joystick.getJoysticks()) do
       print(colorize('%{green}' .. inspect(joy)))
@@ -155,7 +156,7 @@ local function init()
         --print('poly_shape: verts', inspect(verts))
         --love.graphics.rectangle('fill', 0, 0, 1000, 1000)
 
-        print('I am rendered')
+        --print('I am rendered')
 
         love.graphics.polygon('fill', verts)
         coroutine.yield()
@@ -242,10 +243,10 @@ local function eachShape(b, shape)
          table.insert(verts, vert.x)
          table.insert(verts, vert.y)
       end
-      print('shape', shape)
+
       pipeline:open('poly_shape')
       pipeline:push(verts)
-      print('verts', inspect(verts))
+
       pipeline:close()
    end
 
@@ -271,16 +272,16 @@ local function applyInput()
    if joy then
       if joy:isDown(leftBtn) then
          tank:applyImpulse(1. * k, 0)
-         print('left')
+
       elseif joy:isDown(rightBtn) then
          tank:applyImpulse(-1. * k, 0)
-         print('right')
+
       elseif joy:isDown(upBtn) then
          tank:applyImpulse(0, 1 * k)
-         print('up')
+
       elseif joy:isDown(downBtn) then
          tank:applyImpulse(0, -1 * k)
-         print('down')
+
       end
    end
 end
@@ -350,7 +351,7 @@ local function mainloop()
 
 
       local pos = tank:getPos()
-      print('tank pos', pos.x, pos.y)
+
 
       updateJoyState()
 
