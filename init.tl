@@ -6,7 +6,7 @@ local inspect = require "inspect"
 local dprint = require 'debug_print'
 local debug_print = dprint.debug_print
 
-print(colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
+debug_print('thread', colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 
 require 'joystate'
 require "love"
@@ -86,7 +86,18 @@ local function initJoy()
 end
 
 local function init()
-    --dprint.set_filter { ""}
+    dprint.set_filter { 
+        [1] = { "joy" },
+        [2] = { 'phys' },
+        --[3] = { "joy" },
+        --[4] = { "joy" },
+        --[5] = { "joy" },
+        --[6] = { "joy" },
+        --[7] = { "phys" },
+        --[8] = { "phys" },
+        --[9] = { "phys" },
+        --[0] = { "phys" },
+    }
 
     initJoy()
 
@@ -209,7 +220,7 @@ end
 local is_stop = false
 
 local function eachShape(b: Cm.cpBody, shape: Cm.cpShape)
-    --print('eachShape call')
+    debug_print('phys', 'eachShape call')
     --local body = pw.cpBody2Body(b)
     --print(colorize('%{magenta}body: ' .. body:getInfoStr()))
 
@@ -300,11 +311,13 @@ local function mainloop()
                     local scancode = (e as {string})[3]
 
                     local msg = '%{green}keypressed '
-                    print(colorize(msg .. key .. ' ' .. scancode))
+                    debug_print('input', colorize(msg .. key .. ' ' .. scancode))
+
+                    dprint.keypressed(scancode)
 
                     if scancode == "escape" then
                         is_stop = true
-                        print(colorize('%{blue}escape pressed'))
+                        debug_print('input', colorize('%{blue}escape pressed'))
                         break
                     end
 
@@ -367,4 +380,4 @@ if is_stop then
 end
 
 
-print(colorize('%{yellow}<<<<<%{reset} chipmunk_mt finished'))
+debug_print('thread', colorize('%{yellow}<<<<<%{reset} chipmunk_mt finished'))

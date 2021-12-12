@@ -1,9 +1,12 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local table = _tl_compat and _tl_compat.table or table
+
+
 local colorize = require('ansicolors2').ansicolors
 local inspect = require("inspect")
+local dprint = require('debug_print')
+local debug_print = dprint.debug_print
 
-
-print(colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
+debug_print('thread', colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 
 require('joystate')
 require("love")
@@ -70,34 +73,33 @@ local pw = require("physics_wrapper")
 local joy
 local joyState
 
-
-local function init()
+local function initJoy()
    for _, joy in ipairs(joystick.getJoysticks()) do
-      print(colorize('%{green}' .. inspect(joy)))
+      debug_print("joy", colorize('%{green}' .. inspect(joy)))
    end
    joy = joystick.getJoysticks()[1]
    if joy then
-      print(colorize('%{green}avaible ' .. joy:getButtonCount() .. ' buttons'))
-      print(colorize('%{green}hats num: ' .. joy:getHatCount()))
+      debug_print("joy", colorize('%{green}avaible ' .. joy:getButtonCount() .. ' buttons'))
+      debug_print("joy", colorize('%{green}hats num: ' .. joy:getHatCount()))
    end
-
    joyState = JoyState.new(joy)
+end
 
+local function init()
+   dprint.set_filter({
+      [1] = { "joy" },
+      [2] = { 'phys' },
+      [3] = { "joy" },
+      [4] = { "joy" },
+      [5] = { "joy" },
+      [6] = { "joy" },
+      [7] = { "phys" },
+      [8] = { "phys" },
+      [9] = { "phys" },
+      [0] = { "phys" },
+   })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+   initJoy()
 
    local rendercode = [[
     local col = {1, 1, 1, 1}
@@ -176,6 +178,7 @@ local function init()
 
 
 
+
    last_render = love.timer.getTime()
 
    pw.init(pipeline)
@@ -183,7 +186,7 @@ local function init()
 
    tank = pw.newBoxBody(200, 500)
 
-   print('pw.getBodies()', inspect(pw.getBodies()))
+   debug_print("phys", 'pw.getBodies()', inspect(pw.getBodies()))
 end
 
 
@@ -217,7 +220,7 @@ end
 local is_stop = false
 
 local function eachShape(b, shape)
-
+   debug_print('phys', 'eachShape call')
 
 
 
@@ -308,11 +311,13 @@ local function mainloop()
                local scancode = (e)[3]
 
                local msg = '%{green}keypressed '
-               print(colorize(msg .. key .. ' ' .. scancode))
+               debug_print('input', colorize(msg .. key .. ' ' .. scancode))
+
+               dprint.keypressed(scancode)
 
                if scancode == "escape" then
                   is_stop = true
-                  print(colorize('%{blue}escape pressed'))
+                  debug_print('input', colorize('%{blue}escape pressed'))
                   break
                end
 
@@ -375,4 +380,4 @@ if is_stop then
 end
 
 
-print(colorize('%{yellow}<<<<<%{reset} chipmunk_mt finished'))
+debug_print('thread', colorize('%{yellow}<<<<<%{reset} chipmunk_mt finished'))
