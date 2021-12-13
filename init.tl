@@ -13,11 +13,9 @@ require "love"
 require "love_inc".require()
 require 'pipeline'
 
---local joystate = require 'joystate'
 local Cm = require 'chipmunk'
 
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
---local i18n = require "i18n"
 --local format = string.format
 local joystick = love.joystick
 
@@ -85,31 +83,19 @@ local function initJoy()
     joyState = JoyState.new(joy)
 end
 
-local function init()
-    dprint.set_filter { 
-        [1] = { "joy" },
-        [2] = { 'phys' },
-        --[3] = { "joy" },
-        --[4] = { "joy" },
-        --[5] = { "joy" },
-        --[6] = { "joy" },
-        --[7] = { "phys" },
-        --[8] = { "phys" },
-        --[9] = { "phys" },
-        --[0] = { "phys" },
-    }
+local function initRenderCode()
+    -- {{{
+    local rendercode: string
 
-    initJoy()
-
-    local rendercode = [[
-    local col = {1, 1, 1, 1}
-    --love.graphics.setColor(col)
-    while true do
-        --love.graphics.setColor(col)
-        coroutine.yield()
-    end
-    ]]
-    pipeline:pushCode("rect", rendercode)
+    --rendercode = [[
+    --local col = {1, 1, 1, 1}
+    ----love.graphics.setColor(col)
+    --while true do
+        ----love.graphics.setColor(col)
+        --coroutine.yield()
+    --end
+    --]]
+    --pipeline:pushCode("rect", rendercode)
 
     rendercode = [[
     while true do
@@ -178,10 +164,27 @@ local function init()
     })
     }}}
     --]]
+    -- }}}
+end
 
-    last_render = love.timer.getTime()
+local function init()
+    dprint.set_filter { 
+        [1] = { "joy" },
+        [2] = { 'phys' },
+        [3] = { "thread", 'someName' },
+        --[4] = { "joy" },
+        --[5] = { "joy" },
+        --[6] = { "joy" },
+        --[7] = { "phys" },
+        --[8] = { "phys" },
+        --[9] = { "phys" },
+        --[0] = { "phys" },
+    }
 
+    initJoy()
+    initRenderCode()
     pw.init(pipeline)
+    last_render = love.timer.getTime()
 
     -- Почему не указывается позиция?
     tank = pw.newBoxBody(200, 500)
@@ -236,6 +239,11 @@ local function eachShape(b: Cm.cpBody, shape: Cm.cpShape)
         --print('I am poly.')
         --local poly_shape = fff.cast('cpPolyShape*', shape)
         --local num = C.cpPolyShapeGetCount(shape)
+
+        -- Возможно стоит поместить формирование таблички в 
+        -- вспомогательную библиотеку или переписать с прямым доступом к
+        -- shape->planes[i].v0
+
         local num = pw.polyShapeGetCount(shape)
         local verts = {}
         for i = 0, num - 1 do
@@ -292,7 +300,7 @@ end
 local function updateJoyState()
     joyState:update()
     if joyState.state and joyState.state ~= "" then
-        print(joyState.state)
+        debug_print('joy', joyState.state)
     end
 end
 
@@ -356,7 +364,7 @@ local function mainloop()
         --print('------------------------------------------------')
         --print(tank:getInfoStr())
         local pos = tank:getPos()
-        --print('tank pos', pos.x, pos.y)
+        debug_print('phys', 'tank pos', pos.x, pos.y)
 
         updateJoyState()
 
@@ -365,18 +373,13 @@ local function mainloop()
     end
 end
 
-local function free()
-    pw.free()
-end
-
 init()
 mainloop()
 
 if is_stop then
-    free()
+    pw.free()
     main_channel:push('quit')
-    print('Thread resources are freed')
-    --love.event.quit()
+    debug_print('thread', 'Thread resources are freed')
 end
 
 

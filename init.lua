@@ -13,11 +13,9 @@ require("love")
 require("love_inc").require()
 require('pipeline')
 
-
 local Cm = require('chipmunk')
 
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
-
 
 local joystick = love.joystick
 
@@ -85,31 +83,19 @@ local function initJoy()
    joyState = JoyState.new(joy)
 end
 
-local function init()
-   dprint.set_filter({
-      [1] = { "joy" },
-      [2] = { 'phys' },
-      [3] = { "joy" },
-      [4] = { "joy" },
-      [5] = { "joy" },
-      [6] = { "joy" },
-      [7] = { "phys" },
-      [8] = { "phys" },
-      [9] = { "phys" },
-      [0] = { "phys" },
-   })
+local function initRenderCode()
 
-   initJoy()
+   local rendercode
 
-   local rendercode = [[
-    local col = {1, 1, 1, 1}
-    --love.graphics.setColor(col)
-    while true do
-        --love.graphics.setColor(col)
-        coroutine.yield()
-    end
-    ]]
-   pipeline:pushCode("rect", rendercode)
+
+
+
+
+
+
+
+
+
 
    rendercode = [[
     while true do
@@ -179,9 +165,26 @@ local function init()
 
 
 
-   last_render = love.timer.getTime()
+end
 
+local function init()
+   dprint.set_filter({
+      [1] = { "joy" },
+      [2] = { 'phys' },
+      [3] = { "thread", 'someName' },
+
+
+
+
+
+
+
+   })
+
+   initJoy()
+   initRenderCode()
    pw.init(pipeline)
+   last_render = love.timer.getTime()
 
 
    tank = pw.newBoxBody(200, 500)
@@ -233,6 +236,11 @@ local function eachShape(b, shape)
 
 
    if shape_type == pw.CP_POLY_SHAPE then
+
+
+
+
+
 
 
 
@@ -292,7 +300,7 @@ end
 local function updateJoyState()
    joyState:update()
    if joyState.state and joyState.state ~= "" then
-      print(joyState.state)
+      debug_print('joy', joyState.state)
    end
 end
 
@@ -356,7 +364,7 @@ local function mainloop()
 
 
       local pos = tank:getPos()
-
+      debug_print('phys', 'tank pos', pos.x, pos.y)
 
       updateJoyState()
 
@@ -365,18 +373,13 @@ local function mainloop()
    end
 end
 
-local function free()
-   pw.free()
-end
-
 init()
 mainloop()
 
 if is_stop then
-   free()
+   pw.free()
    main_channel:push('quit')
-   print('Thread resources are freed')
-
+   debug_print('thread', 'Thread resources are freed')
 end
 
 
