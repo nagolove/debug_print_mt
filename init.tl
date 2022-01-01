@@ -6,6 +6,19 @@ local inspect = require "inspect"
 local dprint = require 'debug_print'
 local debug_print = dprint.debug_print
 
+dprint.set_filter { 
+    [1] = { "joy" },
+    [2] = { 'phys' },
+    [3] = { "thread", 'someName' },
+    [4] = { "graphics" },
+    [5] = { "input" },
+    --[6] = { "joy" },
+    --[7] = { "phys" },
+    --[8] = { "phys" },
+    --[9] = { "phys" },
+    --[0] = { "phys" },
+}
+
 debug_print('thread', colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 
 require 'joystate'
@@ -168,18 +181,6 @@ local function initRenderCode()
 end
 
 local function init()
-    dprint.set_filter { 
-        [1] = { "joy" },
-        [2] = { 'phys' },
-        [3] = { "thread", 'someName' },
-        --[4] = { "joy" },
-        --[5] = { "joy" },
-        --[6] = { "joy" },
-        --[7] = { "phys" },
-        --[8] = { "phys" },
-        --[9] = { "phys" },
-        --[0] = { "phys" },
-    }
 
     initJoy()
     initRenderCode()
@@ -247,10 +248,9 @@ local function eachShape(b: Cm.cpBody, shape: Cm.cpShape)
         local num = pw.polyShapeGetCount(shape)
         local verts = {}
         for i = 0, num - 1 do
-            --local vert = C.cpPolyShapeGetVert(shape, i)
             local vert = pw.polyShapeGetVert(shape, i)
             --print(inspect(vert))
-            --print('x, y', vert.x, vert.y)
+            debug_print("graphics", 'x, y', vert.x, vert.y)
             table.insert(verts, vert.x)
             table.insert(verts, vert.y)
         end
@@ -282,16 +282,16 @@ local function applyInput()
     local k = 0.1
     if joy then
         if joy:isDown(leftBtn) then
-            tank:applyImpulse(1. * k, 0)
+            tank:applyImpulse(-1. * k, 0)
             --print('left')
         elseif joy:isDown(rightBtn) then
-            tank:applyImpulse(-1. * k, 0)
+            tank:applyImpulse(1. * k, 0)
             --print('right')
         elseif joy:isDown(upBtn) then
-            tank:applyImpulse(0, 1 * k)
+            tank:applyImpulse(0, -1 * k)
             --print('up')
         elseif joy:isDown(downBtn) then
-            tank:applyImpulse(0, -1 * k)
+            tank:applyImpulse(0, 1 * k)
             --print('down')
         end
     end
@@ -362,7 +362,7 @@ local function mainloop()
         applyInput()
         --print('------------------------------------------------')
         --print('------------------------------------------------')
-        --print(tank:getInfoStr())
+        debug_print('phys', tank:getInfoStr())
         local pos = tank:getPos()
         debug_print('phys', 'tank pos', pos.x, pos.y)
 
