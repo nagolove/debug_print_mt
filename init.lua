@@ -12,7 +12,7 @@ dprint.set_filter({
    [3] = { "thread", 'someName' },
    [4] = { "graphics" },
    [5] = { "input" },
-
+   [6] = { "verts" },
 
 
 
@@ -85,8 +85,8 @@ local joy
 local joyState
 
 local function initJoy()
-   for _, joy in ipairs(joystick.getJoysticks()) do
-      debug_print("joy", colorize('%{green}' .. inspect(joy)))
+   for _, j in ipairs(joystick.getJoysticks()) do
+      debug_print("joy", colorize('%{green}' .. inspect(j)))
    end
    joy = joystick.getJoysticks()[1]
    if joy then
@@ -113,9 +113,10 @@ local function initRenderCode()
    rendercode = [[
     while true do
         local w, h = love.graphics.getDimensions()
-        local x, y = math.random() * w, math.random() * h
+        --local x, y = math.random() * w, math.random() * h
+        local x, y = w / 2, h / 2
         love.graphics.setColor{0, 0, 0}
-        love.graphics.print("TestTest", x, y)
+        love.graphics.print("Hello from Siberia!", x, y)
         coroutine.yield()
     end
     ]]
@@ -149,16 +150,10 @@ local function initRenderCode()
 
    pipeline:pushCode("poly_shape", [[
     local col = {1, 0, 0, 1}
-    --love.graphics.setColor(col)
     local inspect = require "inspect"
     while true do
         love.graphics.setColor(col)
         local verts = graphic_command_channel:demand()
-        --print('poly_shape: verts', inspect(verts))
-        --love.graphics.rectangle('fill', 0, 0, 1000, 1000)
-
-        --print('I am rendered')
-
         love.graphics.polygon('fill', verts)
         coroutine.yield()
     end
@@ -188,7 +183,7 @@ local function init()
    last_render = love.timer.getTime()
 
 
-   tank = pw.newBoxBody(200, 500)
+   tank = pw.newBoxBody(200, 200)
 
    debug_print("phys", 'pw.getBodies()', inspect(pw.getBodies()))
 end
@@ -202,6 +197,9 @@ end
 
 local function render()
    if pipeline:ready() then
+
+
+
 
       pipeline:openAndClose('clear')
 
@@ -218,6 +216,7 @@ local function render()
 
 
       pw.eachSpaceBody(bodyIter)
+      pipeline:openAndClose('text')
    end
 end
 
@@ -226,20 +225,9 @@ local is_stop = false
 local function eachShape(b, shape)
    debug_print('phys', 'eachShape call')
 
-
-
-
-
-
-
    local shape_type = pw.polyShapeGetType(shape)
 
-
-
    if shape_type == pw.CP_POLY_SHAPE then
-
-
-
 
 
 
@@ -250,14 +238,12 @@ local function eachShape(b, shape)
       for i = 0, num - 1 do
          local vert = pw.polyShapeGetVert(shape, i)
 
-         debug_print("graphics", 'x, y', vert.x, vert.y)
+         debug_print("verts", 'x, y', vert.x, vert.y)
          table.insert(verts, vert.x)
          table.insert(verts, vert.y)
       end
-
       pipeline:open('poly_shape')
       pipeline:push(verts)
-
       pipeline:close()
    end
 
@@ -281,6 +267,13 @@ local function applyInput()
    local leftBtn, rightBtn, downBtn, upBtn = 3, 2, 1, 4
    local k = 0.1
    if joy then
+      local dx, dy, _ = joy:getAxes()
+      if dx and dy then
+         local divisor = 20
+         dx, dy = dx / divisor, dy / divisor
+         tank:applyImpulse(dx, dy)
+      end
+
       if joy:isDown(leftBtn) then
          tank:applyImpulse(-1. * k, 0)
 

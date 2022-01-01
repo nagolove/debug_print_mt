@@ -12,7 +12,7 @@ dprint.set_filter {
     [3] = { "thread", 'someName' },
     [4] = { "graphics" },
     [5] = { "input" },
-    --[6] = { "joy" },
+    [6] = { "verts" },
     --[7] = { "phys" },
     --[8] = { "phys" },
     --[9] = { "phys" },
@@ -85,8 +85,8 @@ local joy: love.joystick.Joystick
 local joyState: JoyState
 
 local function initJoy()
-    for _, joy in ipairs(joystick.getJoysticks()) do
-        debug_print("joy", colorize('%{green}' .. inspect(joy)))
+    for _, j in ipairs(joystick.getJoysticks()) do
+        debug_print("joy", colorize('%{green}' .. inspect(j)))
     end
     joy = joystick.getJoysticks()[1]
     if joy then
@@ -113,9 +113,10 @@ local function initRenderCode()
     rendercode = [[
     while true do
         local w, h = love.graphics.getDimensions()
-        local x, y = math.random() * w, math.random() * h
+        --local x, y = math.random() * w, math.random() * h
+        local x, y = w / 2, h / 2
         love.graphics.setColor{0, 0, 0}
-        love.graphics.print("TestTest", x, y)
+        love.graphics.print("Hello from Siberia!", x, y)
         coroutine.yield()
     end
     ]]
@@ -149,16 +150,10 @@ local function initRenderCode()
 
     pipeline:pushCode("poly_shape", [[
     local col = {1, 0, 0, 1}
-    --love.graphics.setColor(col)
     local inspect = require "inspect"
     while true do
         love.graphics.setColor(col)
         local verts = graphic_command_channel:demand()
-        --print('poly_shape: verts', inspect(verts))
-        --love.graphics.rectangle('fill', 0, 0, 1000, 1000)
-
-        --print('I am rendered')
-
         love.graphics.polygon('fill', verts)
         coroutine.yield()
     end
@@ -188,7 +183,7 @@ local function init()
     last_render = love.timer.getTime()
 
     -- Почему не указывается позиция?
-    tank = pw.newBoxBody(200, 500)
+    tank = pw.newBoxBody(200, 200)
 
     debug_print("phys", 'pw.getBodies()', inspect(pw.getBodies()))
 end
@@ -202,6 +197,9 @@ end
 --]]
 local function render()
     if pipeline:ready() then
+    --while not pipeline:ready() do
+    --end
+    --do
 
         pipeline:openAndClose('clear')
 
@@ -218,6 +216,7 @@ local function render()
 
         --pw.render()
         pw.eachSpaceBody(bodyIter)
+        pipeline:openAndClose('text')
     end
 end
 
@@ -225,21 +224,10 @@ local is_stop = false
 
 local function eachShape(b: Cm.cpBody, shape: Cm.cpShape)
     debug_print('phys', 'eachShape call')
-    --local body = pw.cpBody2Body(b)
-    --print(colorize('%{magenta}body: ' .. body:getInfoStr()))
 
-    -- Проблема в использовании ffi функций в Teal коде.
-    -- Куда переместить вызов?
-    -- В какие абстракции облечь?
-    --local shape_type = shape.klass_private.type
     local shape_type = pw.polyShapeGetType(shape)
-    --if shape_type == C.CP_POLY_SHAPE then
-    --print('shape_type', shape_type)
-    --print('CP_POLY_SHAPE', CP_POLY_SHAPE)
+
     if shape_type == pw.CP_POLY_SHAPE then
-        --print('I am poly.')
-        --local poly_shape = fff.cast('cpPolyShape*', shape)
-        --local num = C.cpPolyShapeGetCount(shape)
 
         -- Возможно стоит поместить формирование таблички в 
         -- вспомогательную библиотеку или переписать с прямым доступом к
@@ -250,14 +238,12 @@ local function eachShape(b: Cm.cpBody, shape: Cm.cpShape)
         for i = 0, num - 1 do
             local vert = pw.polyShapeGetVert(shape, i)
             --print(inspect(vert))
-            debug_print("graphics", 'x, y', vert.x, vert.y)
+            debug_print("verts", 'x, y', vert.x, vert.y)
             table.insert(verts, vert.x)
             table.insert(verts, vert.y)
         end
-        --print('shape', shape)
         pipeline:open('poly_shape')
         pipeline:push(verts)
-        --print('verts', inspect(verts))
         pipeline:close()
     end
     --]]
@@ -281,6 +267,13 @@ local function applyInput()
     local leftBtn, rightBtn, downBtn, upBtn = 3, 2, 1, 4
     local k = 0.1
     if joy then
+        local dx, dy, _ = joy:getAxes()
+        if dx and dy then
+            local divisor = 20
+            dx, dy = dx / divisor, dy / divisor
+            tank:applyImpulse(dx, dy)
+        end
+
         if joy:isDown(leftBtn) then
             tank:applyImpulse(-1. * k, 0)
             --print('left')
