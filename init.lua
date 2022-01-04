@@ -21,281 +21,41 @@ dprint.set_filter({
 
 debug_print('thread', colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 
-require('joystate')
 require("love")
 require("love_inc").require()
-require('pipeline')
 
-local Cm = require('chipmunk')
 
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
-
-local joystick = love.joystick
 
 local event_channel = love.thread.getChannel("event_channel")
 local main_channel = love.thread.getChannel("main_channel")
 
-local bodyIter
-local shapeIter
+local last_render = 0
 
-local tank
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-local last_render
-
-local pipeline = Pipeline.new("scenes/chipmunk_mt")
-local pw = require("physics_wrapper")
-
-
-
-
-
-
-
-
-local joy
-local joyState
-
-local function initJoy()
-   for _, j in ipairs(joystick.getJoysticks()) do
-      debug_print("joy", colorize('%{green}' .. inspect(j)))
-   end
-   joy = joystick.getJoysticks()[1]
-   if joy then
-      debug_print("joy", colorize('%{green}avaible ' .. joy:getButtonCount() .. ' buttons'))
-      debug_print("joy", colorize('%{green}hats num: ' .. joy:getHatCount()))
-   end
-   joyState = JoyState.new(joy)
-end
-
-local function initRenderCode()
-
-   local rendercode
-
-
-
-
-
-
-
-
-
-
-
-   rendercode = [[
-    while true do
-        local w, h = love.graphics.getDimensions()
-        --local x, y = math.random() * w, math.random() * h
-        local x, y = w / 2, h / 2
-        love.graphics.setColor{0, 0, 0}
-        love.graphics.print("Hello from Siberia!", x, y)
-        coroutine.yield()
-    end
-    ]]
-   pipeline:pushCode('text', rendercode)
-
-   rendercode = [[
-    -- Загружать текстуры здесь
-    -- Загружать текстуры здесь
-    -- Загружать текстуры здесь
-    -- Загружать текстуры здесь
-
-    while true do
-        local y = graphic_command_channel:demand()
-        local x = graphic_command_channel:demand()
-        local rad = graphic_command_channel:demand()
-        love.graphics.setColor{0, 0, 1}
-        love.graphics.circle('fill', x, y, rad)
-        coroutine.yield()
-    end
-    ]]
-   pipeline:pushCode('circle_under_mouse', rendercode)
-
-
-
-   pipeline:pushCode('clear', [[
-    while true do
-        love.graphics.clear{0.5, 0.5, 0.5}
-        coroutine.yield()
-    end
-    ]])
-
-   pipeline:pushCode("poly_shape", [[
-    local col = {1, 0, 0, 1}
-    local inspect = require "inspect"
-    while true do
-        love.graphics.setColor(col)
-        local verts = graphic_command_channel:demand()
-        love.graphics.polygon('fill', verts)
-        coroutine.yield()
-    end
-    ]])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-end
+local threads = {}
+local thread_num = 20
 
 local function init()
 
-   initJoy()
-   initRenderCode()
-   pw.init(pipeline)
-   last_render = love.timer.getTime()
+   local fname = "scenes/debug_print_mt/thread1.lua"
+   for i = 1, thread_num do
+      local thread = love.thread.newThread(fname)
 
-
-   tank = pw.newBoxBody(200, 200)
-
-   debug_print("phys", 'pw.getBodies()', inspect(pw.getBodies()))
+      table.insert(threads, thread)
+      thread:start(i)
+      print("i = ", thread:getError())
+   end
+   print('threads: ', inspect(threads))
 end
 
-
-
-
-
-
-
-
 local function render()
-   if pipeline:ready() then
 
 
 
 
-      pipeline:openAndClose('clear')
-
-
-
-
-
-
-
-
-
-
-
-
-
-      pw.eachSpaceBody(bodyIter)
-      pipeline:openAndClose('text')
-   end
 end
 
 local is_stop = false
-
-local function eachShape(b, shape)
-   debug_print('phys', 'eachShape call')
-
-   local shape_type = pw.polyShapeGetType(shape)
-
-   if shape_type == pw.CP_POLY_SHAPE then
-
-
-
-
-
-      local num = pw.polyShapeGetCount(shape)
-      local verts = {}
-      for i = 0, num - 1 do
-         local vert = pw.polyShapeGetVert(shape, i)
-
-         debug_print("verts", 'x, y', vert.x, vert.y)
-         table.insert(verts, vert.x)
-         table.insert(verts, vert.y)
-      end
-      pipeline:open('poly_shape')
-      pipeline:push(verts)
-      pipeline:close()
-   end
-
-end
-
-local function eachBody(b)
-   local body = pw.cpBody2Body(b)
-   if body then
-
-
-      pw.eachBodyShape(b, shapeIter)
-   else
-
-   end
-end
-
-bodyIter = pw.newEachSpaceBodyIter(eachBody)
-shapeIter = pw.newEachBodyShapeIter(eachShape)
-
-local function applyInput()
-   local leftBtn, rightBtn, downBtn, upBtn = 3, 2, 1, 4
-   local k = 0.1
-   if joy then
-      local dx, dy, _ = joy:getAxes()
-      if dx and dy then
-         local divisor = 20
-         dx, dy = dx / divisor, dy / divisor
-         tank:applyImpulse(dx, dy)
-      end
-
-      if joy:isDown(leftBtn) then
-         tank:applyImpulse(-1. * k, 0)
-
-      elseif joy:isDown(rightBtn) then
-         tank:applyImpulse(1. * k, 0)
-
-      elseif joy:isDown(upBtn) then
-         tank:applyImpulse(0, -1 * k)
-
-      elseif joy:isDown(downBtn) then
-         tank:applyImpulse(0, 1 * k)
-
-      end
-   end
-end
-
-local function updateJoyState()
-   joyState:update()
-   if joyState.state and joyState.state ~= "" then
-      debug_print('joy', joyState.state)
-   end
-end
 
 local function mainloop()
    while not is_stop do
@@ -347,20 +107,6 @@ local function mainloop()
          render()
       end
 
-
-
-
-      pw.update(diff)
-
-      applyInput()
-
-
-      debug_print('phys', tank:getInfoStr())
-      local pos = tank:getPos()
-      debug_print('phys', 'tank pos', pos.x, pos.y)
-
-      updateJoyState()
-
       local timeout = 0.0001
       love.timer.sleep(timeout)
    end
@@ -370,7 +116,6 @@ init()
 mainloop()
 
 if is_stop then
-   pw.free()
    main_channel:push('quit')
    debug_print('thread', 'Thread resources are freed')
 end
