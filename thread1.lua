@@ -28,6 +28,8 @@ dprint.set_filter({
 
 })
 
+require('pipeline')
+
 local thread_channel = love.thread.getChannel("thread_channel")
 
 while true do
@@ -39,7 +41,7 @@ while true do
          end
       end
    end
-   print(format("(%d)", thread_num), 'i do some usefull stuff')
+
 end
 
 msg = '%{yellow}>>>>>%{reset} thread ' .. thread_num .. ' started'

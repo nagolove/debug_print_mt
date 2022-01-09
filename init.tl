@@ -33,7 +33,8 @@ local main_channel = love.thread.getChannel("main_channel")
 local last_render: number = 0
 
 local threads = {}
-local thread_num = 4
+--local thread_num = 4
+local thread_num = 1
 
 local function init()
     --local fname = "scenes/debug_print_mt/thread1.tl"
@@ -56,6 +57,19 @@ local function render()
 end
 
 local is_stop = false
+
+require 'pipeline'
+local pipeline = Pipeline.new("scenes/chipmunk_mt")
+pipeline:pushCode("debug_print", [[
+    local dprint = require "debug_print"
+    local col = {1, 1, 1, 1}
+    while true do
+        love.graphics.setColor(col)
+        --love.graphics.polygon('fill', verts)
+        dprint.render(0, 0)
+        coroutine.yield()
+    end
+]])
 
 local function mainloop()
     while not is_stop do
