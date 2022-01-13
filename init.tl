@@ -30,14 +30,14 @@ love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 local event_channel = love.thread.getChannel("event_channel")
 local main_channel = love.thread.getChannel("main_channel")
 
+local is_stop = false
 local last_render: number = 0
 
 local threads = {}
 --local thread_num = 4
 local thread_num = 1
 
-local function init()
-    --local fname = "scenes/debug_print_mt/thread1.tl"
+local function initThreads()
     local fname = "scenes/debug_print_mt/thread1.lua"
     for i = 1, thread_num do
         local thread = love.thread.newThread(fname)
@@ -49,27 +49,41 @@ local function init()
     print('threads: ', inspect(threads))
 end
 
+local function initPipeline()
+    require 'pipeline'
+    local pipeline = Pipeline.new("scenes/chipmunk_mt")
+
+    pipeline:pushCode("debug_print", [[
+        local dprint = require "debug_print"
+        local col = {1, 1, 1, 1}
+        while true do
+        love.graphics.setColor(col)
+        --love.graphics.polygon('fill', verts)
+        dprint.render(0, 0)
+        coroutine.yield()
+        end
+    ]])
+end
+
+local function printProgramDescription()
+    print(colorize('%{blue}' .. [[description:
+        Программа показывает возможность многопоточной фильтрации логов.
+        Тестирование модуля debug_print()
+        Для переключения фильтров журналирования нажмите цифровые клавиши 1..9 или 0 ]]))
+end
+
+local function init()
+    initThreads()
+    initPipeline()
+    printProgramDescription()
+end
+
 local function render()
     --if pipeline:ready() then
         --pipeline:openAndClose('clear')
         --pipeline:openAndClose('text')
     --end
 end
-
-local is_stop = false
-
-require 'pipeline'
-local pipeline = Pipeline.new("scenes/chipmunk_mt")
-pipeline:pushCode("debug_print", [[
-    local dprint = require "debug_print"
-    local col = {1, 1, 1, 1}
-    while true do
-        love.graphics.setColor(col)
-        --love.graphics.polygon('fill', verts)
-        dprint.render(0, 0)
-        coroutine.yield()
-    end
-]])
 
 local function mainloop()
     while not is_stop do
