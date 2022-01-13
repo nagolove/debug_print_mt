@@ -27,7 +27,7 @@ local start_msg = '%{yellow}>>>>>%{reset}' .. subproject_name .. 'started'
 debug_print('thread', colorize(start_msg))
 
 require "love"
-require "love_inc".require()
+require "love_inc".require_pls()
 
 local require_path = "?.lua;?/init.lua;scenes/" .. subproject_name .. "/?.lua"
 love.filesystem.setRequirePath(require_path)
@@ -59,12 +59,10 @@ end
 local function initPipeline()
     pipeline:pushCode("print_debug_filters", [[
         local dprint = require "debug_print"
-        local col = {1, 1, 1, 1}
+        local col = {1, 0, 1, 1}
         while true do
             love.graphics.setColor(col)
-
-            --love.graphics.polygon('fill', verts)
-            --dprint.render(0, 0)
+            dprint.render(0, 0)
 
             coroutine.yield()
         end
@@ -75,9 +73,13 @@ end
 
 local function printProgramDescription()
     print(colorize('%{blue}' .. [[description:
-        Программа показывает возможность многопоточной фильтрации логов.
-        Тестирование модуля debug_print()
-        Для переключения фильтров журналирования нажмите цифровые клавиши 1..9 или 0 ]]))
+    Программа показывает возможность многопоточной фильтрации логов.
+    Тестирование модуля debug_print()
+    Для переключения фильтров журналирования нажмите цифровые клавиши 1..9 или 0 
+
+    Группы: графика, потоки выполнения
+
+    ]]))
 end
 
 local function init()
