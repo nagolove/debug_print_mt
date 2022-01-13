@@ -1,10 +1,13 @@
 -- vim: set colorcolumn=85
 -- vim: fdm=marker
 
+require 'pipeline'
+
 local colorize = require 'ansicolors2'.ansicolors
 local inspect = require "inspect"
 local dprint = require 'debug_print'
 local debug_print = dprint.debug_print
+local format = string.format
 
 dprint.set_filter { 
     [1] = { "joy" },
@@ -24,9 +27,9 @@ debug_print('thread', colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
 require "love"
 require "love_inc".require()
 
-
 love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
 
+local pipeline = Pipeline.new("scenes/debug_print_mt")
 local event_channel = love.thread.getChannel("event_channel")
 local main_channel = love.thread.getChannel("main_channel")
 
@@ -35,11 +38,12 @@ local last_render: number = 0
 
 local threads = {}
 --local thread_num = 4
-local thread_num = 1
+local threads_num = 1
 
 local function initThreads()
     local fname = "scenes/debug_print_mt/thread1.lua"
-    for i = 1, thread_num do
+    print(colorize("%{red}" .. format("Using %d threads", threads_num)))
+    for i = 1, threads_num do
         local thread = love.thread.newThread(fname)
         --print('thread', thread)
         table.insert(threads, thread)
@@ -50,19 +54,20 @@ local function initThreads()
 end
 
 local function initPipeline()
-    require 'pipeline'
-    local pipeline = Pipeline.new("scenes/chipmunk_mt")
-
-    pipeline:pushCode("debug_print", [[
+    pipeline:pushCode("print_debug_filters", [[
         local dprint = require "debug_print"
         local col = {1, 1, 1, 1}
         while true do
-        love.graphics.setColor(col)
-        --love.graphics.polygon('fill', verts)
-        dprint.render(0, 0)
-        coroutine.yield()
+            love.graphics.setColor(col)
+
+            --love.graphics.polygon('fill', verts)
+            --dprint.render(0, 0)
+
+            coroutine.yield()
         end
     ]])
+
+    --pipeline:pushCode("debug_print", [[ ]])
 end
 
 local function printProgramDescription()
@@ -79,10 +84,11 @@ local function init()
 end
 
 local function render()
-    --if pipeline:ready() then
+    if pipeline:ready() then
         --pipeline:openAndClose('clear')
+        pipeline:openAndClose('print_debug_filters')
         --pipeline:openAndClose('text')
-    --end
+    end
 end
 
 local function mainloop()
