@@ -8,6 +8,7 @@ local inspect = require "inspect"
 local dprint = require 'debug_print'
 local debug_print = dprint.debug_print
 local format = string.format
+local subproject_name = "debug_print_mt"
 
 dprint.set_filter { 
     [1] = { "joy" },
@@ -22,14 +23,16 @@ dprint.set_filter {
     --[0] = { "phys" },
 }
 
-debug_print('thread', colorize('%{yellow}>>>>>%{reset} chipmunk_mt started'))
+local start_msg = '%{yellow}>>>>>%{reset}' .. subproject_name .. 'started'
+debug_print('thread', colorize(start_msg))
 
 require "love"
 require "love_inc".require()
 
-love.filesystem.setRequirePath("?.lua;?/init.lua;scenes/chipmunk_mt/?.lua")
+local require_path = "?.lua;?/init.lua;scenes/" .. subproject_name .. "/?.lua"
+love.filesystem.setRequirePath(require_path)
 
-local pipeline = Pipeline.new("scenes/debug_print_mt")
+local pipeline = Pipeline.new("scenes/" .. subproject_name)
 local event_channel = love.thread.getChannel("event_channel")
 local main_channel = love.thread.getChannel("main_channel")
 
@@ -41,7 +44,7 @@ local threads = {}
 local threads_num = 1
 
 local function initThreads()
-    local fname = "scenes/debug_print_mt/thread1.lua"
+    local fname = "scenes/" .. subproject_name .. "/thread1.lua"
     print(colorize("%{red}" .. format("Using %d threads", threads_num)))
     for i = 1, threads_num do
         local thread = love.thread.newThread(fname)
@@ -155,4 +158,5 @@ if is_stop then
 end
 
 
-debug_print('thread', colorize('%{yellow}<<<<<%{reset} chipmunk_mt finished'))
+local finish_msg = '%{yellow}<<<<<%{reset} ' .. subproject_name .. 'finished'
+debug_print('thread', colorize(finish_msg))
