@@ -57,6 +57,13 @@ local function initThreads()
 end
 
 local function initPipeline()
+    pipeline:pushCode("clear_screen", [[
+    while true do
+        love.graphics.clear()
+        coroutine.yield()
+    end
+    ]])
+
     pipeline:pushCode("print_debug_filters", [[
         local dprint = require "debug_print"
         local col = {1, 0, 1, 1}
@@ -90,7 +97,7 @@ end
 
 local function render()
     if pipeline:ready() then
-        --pipeline:openAndClose('clear')
+        pipeline:openAndClose('clear_screen')
         pipeline:openAndClose('print_debug_filters')
         --pipeline:openAndClose('text')
     end
