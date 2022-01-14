@@ -2,7 +2,7 @@ local colorize = require 'ansicolors2'.ansicolors
 
 local dprint = require 'debug_print'
 --local debug_print = dprint.debug_print
-local debug_print = print
+local debug_print = dprint.debug_print
 --local format = string.format
 
 local thread_num = ...
@@ -12,21 +12,6 @@ local msg: string
 
 msg = '%{yellow}>>>>>%{reset} thread ' .. thread_num .. ' started'
 debug_print('thread', colorize(msg))
-
-dprint.set_filter { 
-    [1] = { "joy" },
-    [2] = { 'phys' },
-    [3] = { "thread", 'someName' },
-    [4] = { "graphics" },
-    [5] = { "input" },
-    [6] = { "verts" },
-
-    --[7] = { "phys" },
-    --[8] = { "phys" },
-    --[9] = { "phys" },
-    --[0] = { "phys" },
-
-}
 
 require 'pipeline'
 

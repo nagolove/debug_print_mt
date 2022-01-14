@@ -41,7 +41,7 @@ local last_render: number = 0
 
 local threads = {}
 --local thread_num = 4
-local threads_num = 1
+local threads_num = 2
 
 local function initThreads()
     local fname = "scenes/" .. subproject_name .. "/thread1.lua"
