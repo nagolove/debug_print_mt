@@ -96,11 +96,10 @@ local function init()
 end
 
 local function render()
-    if pipeline:ready() then
-        pipeline:openAndClose('clear_screen')
-        pipeline:openAndClose('print_debug_filters')
-        --pipeline:openAndClose('text')
-    end
+    pipeline:openAndClose('clear_screen')
+    pipeline:openAndClose('print_debug_filters')
+    --pipeline:openAndClose('text')
+    pipeline:sync()
 end
 
 local function mainloop()
